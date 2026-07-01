@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teach on SoundSlot</title>
+  <meta name="theme-color" content="#07164a">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="icon" href="assets/soundslot-logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="signup-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="SoundSlot home">
+      <img class="brand-logo" src="assets/soundslot-logo.png" alt="" aria-hidden="true">
+      <span>SoundSlot</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html#discover">Find lessons</a>
+      <a href="index.html#bookings">My bookings</a>
+      <a href="signup.html">Teach music</a>
+      <a href="login.html">Login</a>
+      <a href="account.html">Account</a>
+      <a href="contact.html">Feedback</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="signup-shell">
+    <section class="signup-copy">
+      <p class="eyebrow">For teachers</p>
+      <h1>Build your music teaching calendar.</h1>
+      <p>Create a public teacher profile, set your lesson types, prices and availability, then accept bookings from students looking for your exact sound.</p>
+      <div class="quick-stats">
+        <div>
+          <strong>0%</strong>
+          <span>setup fee</span>
+        </div>
+        <div>
+          <strong>15m</strong>
+          <span>to create a profile</span>
+        </div>
+        <div>
+          <strong>7d</strong>
+          <span>weekly payouts</span>
+        </div>
+      </div>
+    </section>
+
+    <form class="teacher-apply" id="teacherApply">
+      <div>
+        <p class="eyebrow">Apply now</p>
+        <h1>Teacher profile</h1>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Full name
+          <input type="text" id="teacherName" required placeholder="Your name">
+        </label>
+        <label>
+          Email
+          <input type="email" id="teacherEmail" required placeholder="you@example.com">
+        </label>
+        <fieldset class="full-span instrument-picker">
+          <legend>Instruments you teach</legend>
+          <div class="choice-grid" id="instrumentChoices"></div>
+          <div class="add-choice">
+            <input type="text" id="newInstrument" placeholder="Add another instrument">
+            <button class="secondary-button" type="button" id="addInstrument">Add instrument</button>
+          </div>
+        </fieldset>
+        <label>
+          Lesson price
+          <input type="number" id="teacherPrice" min="15" max="150" required placeholder="45">
+        </label>
+        <label>
+          Lesson type
+          <select id="teacherType" required>
+            <option>Online</option>
+            <option>In studio</option>
+            <option>At your home</option>
+          </select>
+        </label>
+        <label>
+          Location
+          <input type="text" id="teacherArea" required placeholder="Dublin, online, etc.">
+        </label>
+        <label>
+          Hours per work day
+          <input type="number" id="teacherHoursPerDay" min="1" max="12" required placeholder="6">
+        </label>
+        <label>
+          Days per week
+          <input type="number" id="teacherDaysPerWeek" min="1" max="7" required placeholder="4">
+        </label>
+        <fieldset class="full-span day-picker">
+          <legend>Working days</legend>
+          <label><input type="checkbox" name="workingDay" value="Monday"> Monday</label>
+          <label><input type="checkbox" name="workingDay" value="Tuesday"> Tuesday</label>
+          <label><input type="checkbox" name="workingDay" value="Wednesday"> Wednesday</label>
+          <label><input type="checkbox" name="workingDay" value="Thursday"> Thursday</label>
+          <label><input type="checkbox" name="workingDay" value="Friday"> Friday</label>
+          <label><input type="checkbox" name="workingDay" value="Saturday"> Saturday</label>
+          <label><input type="checkbox" name="workingDay" value="Sunday"> Sunday</label>
+        </fieldset>
+        <label>
+          Start time
+          <input type="time" id="teacherStartTime" required>
+        </label>
+        <label>
+          Finish time
+          <input type="time" id="teacherEndTime" required>
+        </label>
+        <label class="full-span">
+          Teaching bio
+          <textarea id="teacherBio" rows="5" required placeholder="Mention your teaching style, levels, experience and what students can expect."></textarea>
+        </label>
+      </div>
+
+      <input type="hidden" id="editingProfileId">
+      <div class="form-actions">
+        <button type="submit" id="saveTeacherButton">Create teacher profile</button>
+        <button class="secondary-button" type="button" id="clearTeacherForm">New profile</button>
+      </div>
+      <div class="success-message" id="teacherSuccess"></div>
+    </form>
+
+    <section class="teacher-dashboard">
+      <div>
+        <p class="eyebrow">Instructor dashboard</p>
+        <h2>Your saved profiles</h2>
+      </div>
+      <div id="profileManager" class="profile-manager"></div>
+    </section>
+
+    <section class="teacher-dashboard">
+      <div>
+        <p class="eyebrow">Booking requests</p>
+        <h2>Student messages</h2>
+      </div>
+      <div id="requestInbox" class="profile-manager"></div>
+    </section>
+  </main>
+
+  <dialog class="booking-modal" id="requestDetailModal">
+    <div class="modal-card" id="requestDetailContent">
+      <button class="icon-button close-modal" type="button" id="closeRequestDetail" aria-label="Close request details">x</button>
+      <div id="requestDetailBody"></div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+  <script>
+    const form = document.getElementById("teacherApply");
+    const success = document.getElementById("teacherSuccess");
+    const manager = document.getElementById("profileManager");
+    const requestInbox = document.getElementById("requestInbox");
+    const saveButton = document.getElementById("saveTeacherButton");
+    const clearButton = document.getElementById("clearTeacherForm");
+    const instrumentChoices = document.getElementById("instrumentChoices");
+    const newInstrument = document.getElementById("newInstrument");
+    const addInstrumentButton = document.getElementById("addInstrument");
+    const requestDetailModal = document.getElementById("requestDetailModal");
+    const requestDetailBody = document.getElementById("requestDetailBody");
+    let teacherProfilesCache = [];
+    let bookingRequestsCache = [];
+
+    function profileId() {
+      return crypto.randomUUID ? crypto.randomUUID() : `profile-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function profiles() {
+      const items = teacherProfilesCache.length ? teacherProfilesCache : JSON.parse(localStorage.getItem("soundslotTeacherProfiles") || "[]");
+      let changed = false;
+      const withIds = items.map(profile => {
+        if (profile.id) return profile;
+        changed = true;
+        return { ...profile, id: profileId() };
+      });
+      if (changed) saveProfiles(withIds);
+      return withIds;
+    }
+
+    function saveProfiles(items) {
+      teacherProfilesCache = items;
+      localStorage.setItem("soundslotTeacherProfiles", JSON.stringify(items));
+    }
+
+    function ownedTeacherIds() {
+      return JSON.parse(localStorage.getItem("soundslotOwnedTeacherIds") || "[]");
+    }
+
+    function rememberOwnedTeacher(id) {
+      localStorage.setItem("soundslotOwnedTeacherIds", JSON.stringify([...new Set([...ownedTeacherIds(), id])]));
+    }
+
+    function instructorProfiles() {
+      const owned = ownedTeacherIds();
+      const items = profiles();
+      return owned.length ? items.filter(profile => owned.includes(profile.id)) : items;
+    }
+
+    function bookingRequests() {
+      return bookingRequestsCache.length ? bookingRequestsCache : JSON.parse(localStorage.getItem("soundslotBookings") || "[]");
+    }
+
+    function saveBookingRequests(items) {
+      bookingRequestsCache = items;
+      localStorage.setItem("soundslotBookings", JSON.stringify(items));
+    }
+
+    async function loadSharedProfiles() {
+      try {
+        const response = await fetch("/api/teachers");
+        if (!response.ok) throw new Error("No teacher API");
+        const data = await response.json();
+        saveProfiles(data.teachers || []);
+      } catch {
+        teacherProfilesCache = JSON.parse(localStorage.getItem("soundslotTeacherProfiles") || "[]");
+      }
+    }
+
+    async function saveSharedProfile(profile) {
+      try {
+        const response = await fetch("/api/teachers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profile)
+        });
+        if (!response.ok) throw new Error("No teacher API");
+        const data = await response.json();
+        saveProfiles(data.teachers || []);
+        rememberOwnedTeacher(data.teacher.id);
+        return data.teacher;
+      } catch {
+        const items = profiles();
+        const existingIndex = items.findIndex(item => item.id === profile.id);
+        if (existingIndex >= 0) {
+          items[existingIndex] = profile;
+        } else {
+          items.push(profile);
+        }
+        saveProfiles(items);
+        rememberOwnedTeacher(profile.id);
+        return profile;
+      }
+    }
+
+    async function deleteSharedProfile(profileId) {
+      try {
+        const response = await fetch(`/api/teachers/${encodeURIComponent(profileId)}`, {
+          method: "DELETE"
+        });
+        if (!response.ok) throw new Error("No teacher API");
+        const data = await response.json();
+        saveProfiles(data.teachers || []);
+        saveBookingRequests(data.bookings || bookingRequests());
+      } catch {
+        saveProfiles(profiles().filter(item => item.id !== profileId));
+      }
+      localStorage.setItem("soundslotOwnedTeacherIds", JSON.stringify(ownedTeacherIds().filter(id => id !== profileId)));
+    }
+
+    async function loadSharedRequests() {
+      try {
+        const response = await fetch("/api/bookings");
+        if (!response.ok) throw new Error("No booking API");
+        const data = await response.json();
+        saveBookingRequests(data.bookings || []);
+      } catch {
+        bookingRequestsCache = JSON.parse(localStorage.getItem("soundslotBookings") || "[]");
+      }
+    }
+
+    async function updateSharedRequest(requestId, changes) {
+      try {
+        const response = await fetch(`/api/bookings/${encodeURIComponent(requestId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changes)
+        });
+        if (!response.ok) throw new Error("No booking API");
+        const data = await response.json();
+        saveBookingRequests(data.bookings || []);
+      } catch {
+        const items = bookingRequests();
+        const request = items.find(item => item.id === requestId);
+        if (request) Object.assign(request, changes, { updatedAt: new Date().toISOString() });
+        saveBookingRequests(items);
+      }
+    }
+
+    async function refreshInstructorDashboard() {
+      await loadSharedProfiles();
+      await loadSharedRequests();
+      renderManager();
+      renderRequests();
+    }
+
+    function selectedWorkingDays() {
+      return [...document.querySelectorAll("input[name='workingDay']:checked")].map(input => input.value);
+    }
+
+    function selectedInstruments() {
+      return [...document.querySelectorAll("input[name='teacherInstrument']:checked")].map(input => input.value);
+    }
+
+    function renderInstrumentChoices(instruments, selected = selectedInstruments()) {
+      instrumentChoices.innerHTML = instruments.map(instrument => `
+        <label>
+          <input type="checkbox" name="teacherInstrument" value="${instrument}" ${selected.includes(instrument) ? "checked" : ""}>
+          ${instrument}
+        </label>
+      `).join("");
+    }
+
+    async function refreshInstruments(selected = selectedInstruments()) {
+      const instruments = await window.soundslotInstruments.list();
+      renderInstrumentChoices(instruments, selected);
+    }
+
+    function resetEditor(hideMessage = true) {
+      form.reset();
+      document.getElementById("editingProfileId").value = "";
+      refreshInstruments([]);
+      saveButton.textContent = "Create teacher profile";
+      if (hideMessage) {
+        success.classList.remove("is-visible");
+      }
+    }
+
+    function fillEditor(profile) {
+      document.getElementById("editingProfileId").value = profile.id;
+      document.getElementById("teacherName").value = profile.name;
+      document.getElementById("teacherEmail").value = profile.email;
+      renderInstrumentChoices(
+        window.soundslotInstruments.sort([
+          ...window.soundslotInstruments.defaults,
+          ...JSON.parse(localStorage.getItem("soundslotInstruments") || "[]"),
+          ...(profile.instruments || [profile.instrument]).filter(Boolean)
+        ]),
+        profile.instruments || [profile.instrument].filter(Boolean)
+      );
+      document.getElementById("teacherPrice").value = profile.price;
+      document.getElementById("teacherType").value = profile.type;
+      document.getElementById("teacherArea").value = profile.area;
+      document.getElementById("teacherHoursPerDay").value = profile.hoursPerDay || "";
+      document.getElementById("teacherDaysPerWeek").value = profile.daysPerWeek || "";
+      document.getElementById("teacherStartTime").value = profile.startTime || "";
+      document.getElementById("teacherEndTime").value = profile.endTime || "";
+      document.getElementById("teacherBio").value = profile.bio;
+      document.querySelectorAll("input[name='workingDay']").forEach(input => {
+        input.checked = (profile.workingDays || []).includes(input.value);
+      });
+      saveButton.textContent = "Save profile changes";
+      success.textContent = `Editing ${profile.name}'s profile.`;
+      success.classList.add("is-visible");
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderManager() {
+      const items = instructorProfiles();
+      manager.innerHTML = items.map(profile => `
+        <article class="managed-profile">
+          <div>
+            <h3>${profile.name}</h3>
+            <p>${(profile.instruments || [profile.instrument]).filter(Boolean).join(", ")} - ${profile.area} - &euro;${profile.price}</p>
+            <span>${profile.daysPerWeek || 0} days/week, ${profile.hoursPerDay || 0} hours/day</span>
+            <span>${(profile.workingDays || []).join(", ") || "No working days chosen"}</span>
+            <span>${profile.startTime || "--:--"} to ${profile.endTime || "--:--"}</span>
+          </div>
+          <div class="profile-manager-actions">
+            <button type="button" data-edit-profile="${profile.id}">Edit</button>
+            <button class="secondary-button" type="button" data-delete-profile="${profile.id}">Delete</button>
+          </div>
+        </article>
+      `).join("") || `<div class="empty-state">No instructor profiles yet. Create one above and it will appear here for editing.</div>`;
+    }
+
+    function renderRequests() {
+      const instructorEmails = new Set(instructorProfiles().map(profile => profile.email));
+      const instructorIds = new Set(instructorProfiles().map(profile => profile.id));
+      const requests = bookingRequests().filter(request => {
+        return instructorEmails.has(request.teacherEmail) || instructorIds.has(request.teacherId);
+      });
+      requestInbox.innerHTML = requests.map(request => {
+        const status = request.status || "pending";
+        const detail = `${request.name} requested ${request.instrument} for ${request.slot}.`;
+        return `
+          <article class="managed-profile booking-request">
+            <div>
+              <h3>${request.name} wants ${request.instrument}</h3>
+              <p>${request.slot} with ${request.teacher}</p>
+              <span>Student: ${request.email}</span>
+              <span>Instructor: ${request.teacherEmail || "No email saved"}</span>
+              <span>Price: &euro;${Number(request.price || 0).toFixed(2)}</span>
+              <span>${request.goal || "No lesson goal added"}</span>
+              <span class="status-pill status-${status}">${status}</span>
+            </div>
+            <div class="profile-manager-actions">
+              <button class="secondary-button" type="button" data-view-request="${request.id}">Details</button>
+              <a class="primary-link" href="mailto:${request.teacherEmail || ""}?subject=New SoundSlot booking request&body=${encodeURIComponent(detail)} Reply from the instructor dashboard to accept or decline.">Email</a>
+              <button type="button" data-accept-request="${request.id}" ${status !== "pending" ? "disabled" : ""}>Accept</button>
+              <button class="secondary-button" type="button" data-decline-request="${request.id}" ${status !== "pending" ? "disabled" : ""}>Decline</button>
+            </div>
+          </article>
+        `;
+      }).join("") || `<div class="empty-state">No student messages yet. New booking requests will arrive here for approval.</div>`;
+    }
+
+    function openRequestDetail(requestId) {
+      const request = bookingRequests().find(item => item.id === requestId);
+      if (!request) return;
+      requestDetailBody.innerHTML = `
+        <p class="eyebrow">Booking request</p>
+        <h2>${request.name} wants ${request.instrument}</h2>
+        <div class="fee-breakdown">
+          <div><span>Student</span><strong>${request.name}</strong></div>
+          <div><span>Email</span><strong>${request.email}</strong></div>
+          <div><span>Lesson</span><strong>${request.slot}</strong></div>
+          <div><span>Price</span><strong>&euro;${Number(request.price || 0).toFixed(2)}</strong></div>
+          <div><span>Status</span><strong>${request.status || "pending"}</strong></div>
+        </div>
+        <section class="profile-section">
+          <h3>Lesson goal</h3>
+          <p>${request.goal || "The student did not add a lesson goal."}</p>
+        </section>
+        <section class="profile-section">
+          <h3>Request timeline</h3>
+          <p>Requested: ${request.requestedAt ? new Date(request.requestedAt).toLocaleString() : "Unknown"}</p>
+          <p>Updated: ${request.updatedAt ? new Date(request.updatedAt).toLocaleString() : "No response yet"}</p>
+        </section>
+      `;
+      requestDetailModal.showModal();
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const workingDays = selectedWorkingDays();
+      const instruments = selectedInstruments();
+      const daysPerWeek = Number(document.getElementById("teacherDaysPerWeek").value);
+      const hoursPerDay = Number(document.getElementById("teacherHoursPerDay").value);
+      const startTime = document.getElementById("teacherStartTime").value;
+      const endTime = document.getElementById("teacherEndTime").value;
+
+      if (instruments.length === 0) {
+        success.textContent = "Choose at least one instrument to teach.";
+        success.classList.add("is-visible");
+        return;
+      }
+
+      if (workingDays.length !== daysPerWeek) {
+        success.textContent = `Choose exactly ${daysPerWeek} working day${daysPerWeek === 1 ? "" : "s"} to match the days per week.`;
+        success.classList.add("is-visible");
+        return;
+      }
+
+      if (startTime >= endTime) {
+        success.textContent = "Choose a finish time later than the start time.";
+        success.classList.add("is-visible");
+        return;
+      }
+
+      const [startHour, startMinute] = startTime.split(":").map(Number);
+      const [endHour, endMinute] = endTime.split(":").map(Number);
+      const availableHours = ((endHour * 60 + endMinute) - (startHour * 60 + startMinute)) / 60;
+      if (hoursPerDay > availableHours) {
+        success.textContent = `Your daily hours must fit between ${startTime} and ${endTime}.`;
+        success.classList.add("is-visible");
+        return;
+      }
+
+      const profile = {
+        id: document.getElementById("editingProfileId").value || profileId(),
+        name: document.getElementById("teacherName").value,
+        email: document.getElementById("teacherEmail").value,
+        instrument: instruments[0],
+        instruments,
+        price: document.getElementById("teacherPrice").value,
+        type: document.getElementById("teacherType").value,
+        area: document.getElementById("teacherArea").value,
+        hoursPerDay,
+        daysPerWeek: document.getElementById("teacherDaysPerWeek").value,
+        workingDays,
+        startTime,
+        endTime,
+        bio: document.getElementById("teacherBio").value,
+        createdAt: new Date().toISOString()
+      };
+
+      await saveSharedProfile(profile);
+
+      success.textContent = `${profile.name}'s ${profile.instruments.join(", ")} profile has been saved.`;
+      success.classList.add("is-visible");
+      resetEditor(false);
+      await refreshInstructorDashboard();
+    });
+
+    manager.addEventListener("click", async event => {
+      const editButton = event.target.closest("[data-edit-profile]");
+      if (editButton) {
+        const profile = profiles().find(item => item.id === editButton.dataset.editProfile);
+        if (profile) fillEditor(profile);
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-profile]");
+      if (deleteButton) {
+        await deleteSharedProfile(deleteButton.dataset.deleteProfile);
+        await refreshInstructorDashboard();
+        resetEditor();
+      }
+    });
+
+    addInstrumentButton.addEventListener("click", async () => {
+      const instrument = newInstrument.value.trim();
+      if (!instrument) return;
+      const selected = [...selectedInstruments(), instrument];
+      const instruments = await window.soundslotInstruments.add(instrument);
+      renderInstrumentChoices(instruments, selected);
+      newInstrument.value = "";
+      success.textContent = `${instrument} was added to the shared instrument list.`;
+      success.classList.add("is-visible");
+    });
+
+    newInstrument.addEventListener("keydown", event => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      addInstrumentButton.click();
+    });
+
+    window.addEventListener("soundslot:instruments-updated", event => {
+      renderInstrumentChoices(event.detail);
+    });
+
+    requestInbox.addEventListener("click", async event => {
+      const detailButton = event.target.closest("[data-view-request]");
+      if (detailButton) {
+        openRequestDetail(detailButton.dataset.viewRequest);
+        return;
+      }
+
+      const acceptButton = event.target.closest("[data-accept-request]");
+      const declineButton = event.target.closest("[data-decline-request]");
+      if (!acceptButton && !declineButton) return;
+
+      const requestId = (acceptButton || declineButton).dataset.acceptRequest || (acceptButton || declineButton).dataset.declineRequest;
+      await updateSharedRequest(requestId, {
+        status: acceptButton ? "accepted" : "declined",
+        respondedAt: new Date().toISOString()
+      });
+      await refreshInstructorDashboard();
+    });
+
+    document.getElementById("closeRequestDetail").addEventListener("click", () => requestDetailModal.close());
+
+    clearButton.addEventListener("click", resetEditor);
+    refreshInstruments();
+    async function initInstructorDashboard() {
+      await refreshInstructorDashboard();
+    }
+
+    initInstructorDashboard();
+    window.addEventListener("storage", event => {
+      if (["soundslotTeacherProfiles", "soundslotBookings", "soundslotInstruments"].includes(event.key)) {
+        refreshInstructorDashboard();
+      }
+    });
+    window.addEventListener("focus", refreshInstructorDashboard);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshInstructorDashboard();
+    });
+    setInterval(refreshInstructorDashboard, 10000);
+  </script>
+</body>
+</html>

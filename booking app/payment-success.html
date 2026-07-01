@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSlot | Payment Complete</title>
+  <meta name="theme-color" content="#07164a">
+  <link rel="icon" href="assets/soundslot-logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="SoundSlot home">
+      <img class="brand-logo" src="assets/soundslot-logo.png" alt="" aria-hidden="true">
+      <span>SoundSlot</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html#discover">Find lessons</a>
+      <a href="index.html#bookings">My bookings</a>
+      <a href="signup.html">Teach music</a>
+      <a href="login.html">Login</a>
+      <a href="account.html">Account</a>
+      <a href="contact.html">Feedback</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="contact-shell">
+    <section class="feedback-intro">
+      <p class="eyebrow">Payment complete</p>
+      <h1>Your booking payment is being confirmed.</h1>
+      <p id="paymentStatus">Updating your booking now...</p>
+      <a class="button-link" href="index.html#bookings">Back to bookings</a>
+    </section>
+  </main>
+
+  <script>
+    const statusText = document.getElementById("paymentStatus");
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get("bookingId");
+    const paymentId = params.get("paymentId");
+
+    function updateLocalBooking(changes) {
+      const bookings = JSON.parse(localStorage.getItem("soundslotBookings") || "[]");
+      const booking = bookings.find(item => item.id === bookingId);
+      if (booking) {
+        Object.assign(booking, changes);
+        localStorage.setItem("soundslotBookings", JSON.stringify(bookings));
+      }
+    }
+
+    async function completePayment() {
+      if (!bookingId || !paymentId) {
+        statusText.textContent = "We could not find the booking details for this payment.";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/payments/${encodeURIComponent(paymentId)}/complete`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Payment confirmation failed");
+        updateLocalBooking(data.booking || {
+          status: "paid",
+          paymentId,
+          paidAt: new Date().toISOString()
+        });
+        statusText.textContent = "Payment confirmed. Your instructor can now see the paid booking.";
+      } catch (error) {
+        statusText.textContent = error.message;
+      }
+    }
+
+    completePayment();
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>

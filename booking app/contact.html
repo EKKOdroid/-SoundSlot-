@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact SoundSlot Developers</title>
+  <meta name="theme-color" content="#07164a">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="icon" href="assets/soundslot-logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="contact-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="SoundSlot home">
+      <img class="brand-logo" src="assets/soundslot-logo.png" alt="" aria-hidden="true">
+      <span>SoundSlot</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html#discover">Find lessons</a>
+      <a href="index.html#bookings">My bookings</a>
+      <a href="signup.html">Teach music</a>
+      <a href="login.html">Login</a>
+      <a href="account.html">Account</a>
+      <a href="contact.html">Feedback</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="contact-shell">
+    <section class="contact-copy">
+      <p class="eyebrow">Help improve SoundSlot</p>
+      <h1>Send suggestions to the website developers.</h1>
+      <p>Share bugs, feature ideas, design feedback, or anything that would make booking and teaching music lessons easier.</p>
+    </section>
+
+    <form class="feedback-form" id="feedbackForm">
+      <div>
+        <p class="eyebrow">Developer feedback</p>
+        <h2>Suggestion form</h2>
+      </div>
+
+      <label>
+        Your name
+        <input type="text" id="feedbackName" required placeholder="Your name">
+      </label>
+      <label>
+        Your email
+        <input type="email" id="feedbackEmail" required placeholder="you@example.com">
+      </label>
+      <label>
+        Feedback type
+        <select id="feedbackType" required>
+          <option>Feature idea</option>
+          <option>Bug report</option>
+          <option>Design suggestion</option>
+          <option>Accessibility issue</option>
+          <option>Other</option>
+        </select>
+      </label>
+      <label>
+        Message
+        <textarea id="feedbackMessage" rows="7" required placeholder="Tell the developers what should be improved."></textarea>
+      </label>
+
+      <button type="submit">Send email to developers</button>
+      <div class="success-message" id="feedbackSuccess"></div>
+    </form>
+
+    <form class="feedback-form donation-form" id="donationForm">
+      <div>
+        <p class="eyebrow">Support the app</p>
+        <h2>Developer donation</h2>
+      </div>
+      <label>
+        Your name
+        <input type="text" id="donorName" placeholder="Anonymous">
+      </label>
+      <label>
+        Your email
+        <input type="email" id="donorEmail" placeholder="you@example.com">
+      </label>
+      <label>
+        Donation amount
+        <input type="number" id="donationAmount" min="1" step="0.01" required placeholder="5.00">
+      </label>
+      <label>
+        Message
+        <textarea id="donationMessage" rows="3" placeholder="Optional note for the developer"></textarea>
+      </label>
+      <button type="submit">Donate to developer</button>
+      <p class="calendar-note">You will be sent to the payment provider to complete the donation securely.</p>
+      <div class="success-message" id="donationSuccess"></div>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById("feedbackForm");
+    const success = document.getElementById("feedbackSuccess");
+    const donationForm = document.getElementById("donationForm");
+    const donationSuccess = document.getElementById("donationSuccess");
+    const developerEmail = "developers@soundslot.example";
+
+    const pageParams = new URLSearchParams(window.location.search);
+    if (pageParams.get("donation") === "success") {
+      donationSuccess.textContent = "Thank you. Your donation checkout was completed.";
+      donationSuccess.classList.add("is-visible");
+    }
+
+    function savedSuggestions() {
+      return JSON.parse(localStorage.getItem("soundslotDeveloperSuggestions") || "[]");
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const suggestion = {
+        name: document.getElementById("feedbackName").value,
+        email: document.getElementById("feedbackEmail").value,
+        type: document.getElementById("feedbackType").value,
+        message: document.getElementById("feedbackMessage").value,
+        createdAt: new Date().toISOString()
+      };
+
+      const suggestions = savedSuggestions();
+      suggestions.push(suggestion);
+      localStorage.setItem("soundslotDeveloperSuggestions", JSON.stringify(suggestions));
+
+      const subject = encodeURIComponent(`SoundSlot ${suggestion.type}`);
+      const body = encodeURIComponent(
+        `Name: ${suggestion.name}\nEmail: ${suggestion.email}\nType: ${suggestion.type}\n\n${suggestion.message}`
+      );
+      window.location.href = `mailto:${developerEmail}?subject=${subject}&body=${body}`;
+
+      success.textContent = "Your email app should open now. A local copy of this suggestion was also saved in the browser.";
+      success.classList.add("is-visible");
+      form.reset();
+    });
+
+    donationForm.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const donation = {
+        name: document.getElementById("donorName").value || "Anonymous",
+        email: document.getElementById("donorEmail").value,
+        amount: Number(document.getElementById("donationAmount").value),
+        message: document.getElementById("donationMessage").value
+      };
+
+      try {
+        donationSuccess.textContent = "Creating secure checkout...";
+        donationSuccess.classList.add("is-visible");
+        const response = await fetch("/api/donations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(donation)
+        });
+        const savedDonation = await response.json();
+        if (!response.ok) throw new Error(savedDonation.error || savedDonation.setup || "Donation checkout unavailable");
+        if (!savedDonation.checkoutUrl) throw new Error("The payment provider did not return a checkout link.");
+        window.location.href = savedDonation.checkoutUrl;
+      } catch (error) {
+        donationSuccess.textContent = error.message;
+        donationSuccess.classList.add("is-visible");
+      }
+    });
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>

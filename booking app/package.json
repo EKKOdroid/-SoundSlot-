@@ -1,0 +1,12 @@
+{
+  "name": "soundslot-booking-app",
+  "version": "1.3.0",
+  "description": "A music lesson booking website that can run as an installable web app.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

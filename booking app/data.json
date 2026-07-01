@@ -1,0 +1,82 @@
+{
+  "instruments": [
+    "Banjo",
+    "DJ",
+    "Drums",
+    "Guitar",
+    "Piano",
+    "Saxophone",
+    "Singing",
+    "Violin"
+  ],
+  "teachers": [
+    {
+      "id": "2e2d012a-eed3-436f-8cde-a979d70d545a",
+      "name": "Test 1",
+      "email": "123@gmail.com",
+      "instrument": "Banjo",
+      "instruments": [
+        "Banjo"
+      ],
+      "price": "50",
+      "type": "Online",
+      "area": "Dublin",
+      "hoursPerDay": 2,
+      "daysPerWeek": "1",
+      "workingDays": [
+        "Monday"
+      ],
+      "startTime": "01:00",
+      "endTime": "18:00",
+      "bio": "Test 1",
+      "createdAt": "2026-05-28T18:51:18.005Z",
+      "rating": 0,
+      "reviews": 0,
+      "likes": 0,
+      "reviewsList": [],
+      "updatedAt": "2026-05-28T18:51:18.050Z"
+    },
+    {
+      "id": "aa420710-8150-44fd-b0f4-47b6e81fb79b",
+      "name": "Test 2",
+      "email": "123@gmail.com",
+      "instrument": "Saxophone",
+      "instruments": [
+        "Saxophone"
+      ],
+      "price": "120",
+      "type": "Online",
+      "area": "Monaghan",
+      "hoursPerDay": 2,
+      "daysPerWeek": "4",
+      "workingDays": [
+        "Monday",
+        "Wednesday",
+        "Friday",
+        "Sunday"
+      ],
+      "startTime": "12:00",
+      "endTime": "14:00",
+      "bio": "Test 2",
+      "createdAt": "2026-05-30T12:26:48.845Z",
+      "rating": 0,
+      "reviews": 0,
+      "likes": 0,
+      "reviewsList": [],
+      "updatedAt": "2026-05-30T12:26:48.853Z"
+    }
+  ],
+  "bookings": [],
+  "payments": [],
+  "donations": [
+    {
+      "id": "donation-1779994405846-4e69c4df862e2",
+      "name": "Anonymous",
+      "email": "",
+      "amount": 10,
+      "message": "",
+      "status": "legacy_recorded",
+      "createdAt": "2026-05-28T18:53:25.852Z"
+    }
+  ]
+}

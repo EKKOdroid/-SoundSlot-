@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSlot Admin | Alison</title>
+  <meta name="theme-color" content="#07164a">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="icon" href="assets/soundslot-logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="admin-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="SoundSlot home">
+      <img class="brand-logo" src="assets/soundslot-logo.png" alt="" aria-hidden="true">
+      <span>SoundSlot</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html#discover">Find lessons</a>
+      <a href="index.html#bookings">My bookings</a>
+      <a href="signup.html">Teach music</a>
+      <a href="login.html">Login</a>
+      <a href="account.html">Account</a>
+      <a href="contact.html">Feedback</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="admin-shell">
+    <section class="admin-hero">
+      <div>
+        <p class="eyebrow">Owner dashboard</p>
+        <h1>Alison's SoundSlot admin.</h1>
+        <p>Track teachers, bookings, payments, app fees, donations, and suggestions from one private dashboard.</p>
+      </div>
+      <form class="admin-lock" id="adminLock">
+        <label>
+          Owner access code
+          <input type="password" id="adminKey" autocomplete="current-password" required placeholder="Enter your admin code">
+        </label>
+        <button type="submit">Open dashboard</button>
+        <p class="calendar-note">This dashboard is made for Alison and uses a server admin code.</p>
+      </form>
+    </section>
+
+    <section class="admin-dashboard" id="adminDashboard" hidden>
+      <div class="admin-topline">
+        <div>
+          <p class="eyebrow" id="adminOwner">Owner</p>
+          <h2 id="adminTitle">Dashboard</h2>
+          <p id="adminMeta"></p>
+        </div>
+        <div class="form-actions">
+          <button class="secondary-button" type="button" id="refreshAdmin">Refresh</button>
+          <button class="secondary-button" type="button" id="lockAdmin">Lock</button>
+        </div>
+      </div>
+
+      <div class="admin-metrics" id="adminMetrics"></div>
+
+      <section class="admin-section">
+        <div class="section-heading">
+          <p class="eyebrow">Bookings</p>
+          <h2>Student requests</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Instructor</th>
+                <th>Lesson</th>
+                <th>Status</th>
+                <th>Payment</th>
+              </tr>
+            </thead>
+            <tbody id="bookingRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-section">
+        <div class="section-heading">
+          <p class="eyebrow">Users</p>
+          <h2>Student accounts</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Created</th>
+                <th>Last login</th>
+              </tr>
+            </thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-section">
+        <div class="section-heading">
+          <p class="eyebrow">Instructors</p>
+          <h2>Teacher profiles</h2>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Instruments</th>
+                <th>Price</th>
+                <th>Availability</th>
+                <th>Rating</th>
+              </tr>
+            </thead>
+            <tbody id="teacherRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-section">
+        <div class="section-heading">
+          <p class="eyebrow">Money</p>
+          <h2>Payments and donations</h2>
+        </div>
+        <div class="admin-split">
+          <div class="admin-list" id="paymentRows"></div>
+          <div class="admin-list" id="donationRows"></div>
+        </div>
+      </section>
+
+      <section class="admin-section">
+        <div class="section-heading">
+          <p class="eyebrow">Feedback</p>
+          <h2>Saved suggestions</h2>
+        </div>
+        <div class="admin-list" id="suggestionRows"></div>
+      </section>
+    </section>
+
+    <div class="success-message" id="adminMessage"></div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const adminLock = document.getElementById("adminLock");
+    const adminKeyInput = document.getElementById("adminKey");
+    const adminDashboard = document.getElementById("adminDashboard");
+    const adminMessage = document.getElementById("adminMessage");
+    const adminMetrics = document.getElementById("adminMetrics");
+    const bookingRows = document.getElementById("bookingRows");
+    const userRows = document.getElementById("userRows");
+    const teacherRows = document.getElementById("teacherRows");
+    const paymentRows = document.getElementById("paymentRows");
+    const donationRows = document.getElementById("donationRows");
+    const suggestionRows = document.getElementById("suggestionRows");
+    const adminOwner = document.getElementById("adminOwner");
+    const adminTitle = document.getElementById("adminTitle");
+    const adminMeta = document.getElementById("adminMeta");
+    const adminKeyStore = "soundslotAdminKey";
+
+    function euro(value) {
+      return `&euro;${Number(value || 0).toFixed(2)}`;
+    }
+
+    function niceDate(value) {
+      if (!value) return "Not set";
+      return new Date(value).toLocaleString("en-IE", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function showMessage(message) {
+      adminMessage.textContent = message;
+      adminMessage.classList.add("is-visible");
+    }
+
+    function savedSuggestions() {
+      return JSON.parse(localStorage.getItem("soundslotDeveloperSuggestions") || "[]");
+    }
+
+    async function fetchOverview(key) {
+      const response = await fetch("/api/admin/overview", {
+        headers: { "X-Admin-Key": key }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Admin access failed");
+      return data;
+    }
+
+    function renderMetrics(metrics, provider) {
+      const cards = [
+        ["Teachers", metrics.teachers],
+        ["Users", metrics.users],
+        ["Bookings", metrics.bookings],
+        ["Pending", metrics.pendingBookings],
+        ["Paid bookings", metrics.paidBookings],
+        ["Lesson gross", euro(metrics.lessonGross)],
+        ["App fees", euro(metrics.appFees)],
+        ["Instructor payouts", euro(metrics.instructorPayouts)],
+        ["Donations", euro(metrics.donationTotal)]
+      ];
+
+      adminMetrics.innerHTML = cards.map(([label, value]) => `
+        <article class="metric-card">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </article>
+      `).join("") + `
+        <article class="metric-card provider-card">
+          <span>Revolut</span>
+          <strong>${provider.revolutConfigured ? "Ready" : "Needs setup"}</strong>
+        </article>
+      `;
+    }
+
+    function renderBookings(bookings) {
+      bookingRows.innerHTML = bookings.map(booking => `
+        <tr>
+          <td>
+            <strong>${booking.name || booking.studentName || "Student"}</strong>
+            <span>${booking.email || booking.studentEmail || ""}</span>
+          </td>
+          <td>${booking.teacher || "Instructor"}</td>
+          <td>
+            <strong>${booking.instrument || "Lesson"}</strong>
+            <span>${booking.slot || "No slot"}</span>
+          </td>
+          <td><span class="status-pill status-${booking.status || "pending"}">${booking.status || "pending"}</span></td>
+          <td>${booking.paymentId || "Not paid yet"}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5">No bookings yet.</td></tr>`;
+    }
+
+    function renderTeachers(teachers) {
+      teacherRows.innerHTML = teachers.map(teacher => `
+        <tr>
+          <td>
+            <strong>${teacher.name}</strong>
+            <span>${teacher.email || ""}</span>
+          </td>
+          <td>${(teacher.instruments || [teacher.instrument]).filter(Boolean).join(", ")}</td>
+          <td>${euro(teacher.price)}</td>
+          <td>${teacher.workDays || teacher.daysPerWeek || "Flexible"} days, ${teacher.workHours || teacher.hoursPerWeek || "custom"} hours</td>
+          <td>${teacher.rating || 0} / ${teacher.reviews || 0} reviews</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5">No instructors yet.</td></tr>`;
+    }
+
+    function renderUsers(users) {
+      userRows.innerHTML = users.map(user => `
+        <tr>
+          <td>
+            <strong>${user.name}</strong>
+            <span>${user.id}</span>
+          </td>
+          <td>${user.email}</td>
+          <td>${user.phone || "Not added"}</td>
+          <td>${niceDate(user.createdAt)}</td>
+          <td>${niceDate(user.lastLoginAt)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5">No user accounts yet.</td></tr>`;
+    }
+
+    function renderMoney(payments, donations) {
+      paymentRows.innerHTML = `
+        <h3>Lesson payments</h3>
+        ${payments.map(payment => `
+          <article class="admin-list-item">
+            <div>
+              <strong>${payment.teacher || "Instructor"} - ${payment.instrument || "Lesson"}</strong>
+              <span>${payment.status} - ${niceDate(payment.createdAt)}</span>
+            </div>
+            <strong>${euro(payment.gross)}</strong>
+          </article>
+        `).join("") || `<div class="empty-state">No payments yet.</div>`}
+      `;
+
+      donationRows.innerHTML = `
+        <h3>Developer donations</h3>
+        ${donations.map(donation => `
+          <article class="admin-list-item">
+            <div>
+              <strong>${donation.name || "Anonymous"}</strong>
+              <span>${donation.status} - ${niceDate(donation.createdAt)}</span>
+            </div>
+            <strong>${euro(donation.amount)}</strong>
+          </article>
+        `).join("") || `<div class="empty-state">No donations yet.</div>`}
+      `;
+    }
+
+    function renderSuggestions() {
+      const suggestions = savedSuggestions();
+      suggestionRows.innerHTML = suggestions.map(suggestion => `
+        <article class="admin-list-item">
+          <div>
+            <strong>${suggestion.type} from ${suggestion.name}</strong>
+            <span>${suggestion.email} - ${niceDate(suggestion.createdAt)}</span>
+            <p>${suggestion.message}</p>
+          </div>
+        </article>
+      `).join("") || `<div class="empty-state">No saved suggestions in this browser yet.</div>`;
+    }
+
+    async function loadAdmin(key = localStorage.getItem(adminKeyStore)) {
+      if (!key) return;
+      try {
+        const data = await fetchOverview(key);
+        localStorage.setItem(adminKeyStore, key);
+        adminLock.hidden = true;
+        adminDashboard.hidden = false;
+        adminMessage.classList.remove("is-visible");
+        adminOwner.textContent = `${data.owner}'s dashboard`;
+        adminTitle.textContent = `${data.app} admin`;
+        adminMeta.textContent = `Version ${data.version} - updated ${niceDate(data.generatedAt)}`;
+        renderMetrics(data.metrics, data.paymentProvider);
+        renderBookings(data.bookings);
+        renderUsers(data.users || []);
+        renderTeachers(data.teachers);
+        renderMoney(data.payments, data.donations);
+        renderSuggestions();
+      } catch (error) {
+        localStorage.removeItem(adminKeyStore);
+        adminLock.hidden = false;
+        adminDashboard.hidden = true;
+        showMessage(error.message);
+      }
+    }
+
+    adminLock.addEventListener("submit", event => {
+      event.preventDefault();
+      loadAdmin(adminKeyInput.value);
+    });
+
+    document.getElementById("refreshAdmin").addEventListener("click", () => loadAdmin());
+    document.getElementById("lockAdmin").addEventListener("click", () => {
+      localStorage.removeItem(adminKeyStore);
+      adminKeyInput.value = "";
+      adminLock.hidden = false;
+      adminDashboard.hidden = true;
+      showMessage("Dashboard locked.");
+    });
+
+    loadAdmin();
+  </script>
+</body>
+</html>

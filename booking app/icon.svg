@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SoundSlot icon">
+  <rect width="512" height="512" rx="96" fill="#0f766e"/>
+  <circle cx="356" cy="154" r="54" fill="#f4b860"/>
+  <path fill="#ffffff" d="M180 356c-38 0-68-24-68-56s30-56 68-56c14 0 27 3 38 9V120h158v58H276v122c0 32-30 56-96 56Z"/>
+  <path fill="#17211f" d="M276 120h100v58H276z" opacity=".22"/>
+</svg>

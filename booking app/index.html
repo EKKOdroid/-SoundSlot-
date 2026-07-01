@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSlot | Book Music Lessons</title>
+  <meta name="theme-color" content="#07164a">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="icon" href="assets/soundslot-logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="SoundSlot home">
+      <img class="brand-logo" src="assets/soundslot-logo.png" alt="" aria-hidden="true">
+      <span>SoundSlot</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#discover">Find lessons</a>
+      <a href="#bookings">My bookings</a>
+      <a href="signup.html">Teach music</a>
+      <a href="login.html">Login</a>
+      <a href="account.html">Account</a>
+      <a href="contact.html">Feedback</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Find music teachers">
+      <div class="hero-copy">
+        <p class="eyebrow">Music lessons, booked your way</p>
+        <h1>Book trusted music teachers in minutes.</h1>
+        <p>Find local and online teachers for piano, guitar, singing, drums, violin, DJ-ing and more. Compare reviews, prices, availability and lesson styles before you book.</p>
+      </div>
+
+      <form class="search-panel" id="searchForm">
+        <label>
+          Instrument
+          <select id="instrumentFilter">
+            <option value="all">Any instrument</option>
+            <option value="Piano">Piano</option>
+            <option value="Guitar">Guitar</option>
+            <option value="Singing">Singing</option>
+            <option value="Drums">Drums</option>
+            <option value="Violin">Violin</option>
+            <option value="DJ">DJ</option>
+          </select>
+        </label>
+        <label>
+          Lesson type
+          <select id="typeFilter">
+            <option value="all">Online or in-person</option>
+            <option value="Online">Online</option>
+            <option value="In studio">In studio</option>
+            <option value="At your home">At your home</option>
+          </select>
+        </label>
+        <label>
+          Search
+          <input id="searchInput" type="search" placeholder="Teacher, style, area">
+        </label>
+        <button type="submit">Search teachers</button>
+      </form>
+    </section>
+
+    <section class="quick-stats" aria-label="Marketplace highlights">
+    </section>
+
+    <section class="app-layout" id="discover">
+      <aside class="filters" aria-label="Lesson filters">
+        <div class="section-heading">
+          <p class="eyebrow">Refine</p>
+          <h2>Find your fit</h2>
+        </div>
+
+        <label>
+          Max price per lesson
+          <input id="priceFilter" type="range" min="10" max="200" value="200">
+          <span id="priceLabel">Up to &euro;200</span>
+        </label>
+
+        <fieldset>
+          <legend>Level</legend>
+          <label><input type="checkbox" name="level" value="Beginner"> Beginner</label>
+          <label><input type="checkbox" name="level" value="Intermediate"> Intermediate</label>
+          <label><input type="checkbox" name="level" value="Advanced"> Advanced</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Best for</legend>
+          <label><input type="checkbox" name="tag" value="Kids"> Kids</label>
+          <label><input type="checkbox" name="tag" value="Adults"> Adults</label>
+          <label><input type="checkbox" name="tag" value="Exams"> Exams</label>
+          <label><input type="checkbox" name="tag" value="Performance"> Performance</label>
+        </fieldset>
+
+        <button class="secondary-button" id="clearFilters" type="button">Clear filters</button>
+      </aside>
+
+      <section class="results-area" aria-live="polite">
+        <div class="results-top">
+          <div>
+            <p class="eyebrow">Available now</p>
+            <h2 id="resultCount">Teachers</h2>
+          </div>
+          <label>
+            Sort by
+            <select id="sortFilter">
+              <option value="recommended">Recommended</option>
+              <option value="rating">Highest rated</option>
+              <option value="price">Lowest price</option>
+            </select>
+          </label>
+        </div>
+        <div class="teacher-grid" id="teacherGrid"></div>
+      </section>
+    </section>
+
+    <section class="booking-desk" id="bookings">
+      <div class="section-heading">
+        <p class="eyebrow">Your schedule</p>
+        <h2>Upcoming bookings</h2>
+      </div>
+      <div id="bookingList" class="booking-list"></div>
+    </section>
+  </main>
+
+  <dialog class="booking-modal" id="bookingModal">
+    <form method="dialog" class="modal-card" id="bookingForm">
+      <button class="icon-button close-modal" type="button" id="closeModal" aria-label="Close booking form">x</button>
+      <div id="modalTeacher"></div>
+
+      <section class="calendar-picker" aria-labelledby="calendarTitle">
+        <div>
+          <p class="eyebrow">Instructor calendar</p>
+          <h3 id="calendarTitle">Choose an available slot</h3>
+        </div>
+        <div class="calendar-toolbar">
+          <button class="secondary-button" type="button" id="prevMonth">Previous</button>
+          <strong id="calendarMonthLabel"></strong>
+          <button class="secondary-button" type="button" id="nextMonth">Next</button>
+        </div>
+        <div class="calendar-weekdays" aria-hidden="true">
+          <span>Sun</span>
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-times" id="daySlotList"></div>
+        <p class="calendar-note" id="calendarNote">Booked appointments are removed from this teacher's calendar.</p>
+      </section>
+      <label>
+        Your name
+        <input id="studentName" type="text" placeholder="e.g. Alison" required>
+      </label>
+      <label>
+        Email
+        <input id="studentEmail" type="email" placeholder="you@example.com" required>
+      </label>
+      <label>
+        Lesson goal
+        <textarea id="lessonGoal" rows="3" placeholder="Tell the teacher what you want to work on"></textarea>
+      </label>
+
+      <button type="submit">Confirm booking</button>
+    </form>
+  </dialog>
+
+  <dialog class="profile-modal" id="profileModal">
+    <div class="modal-card profile-card">
+      <button class="icon-button close-modal" type="button" id="closeProfile" aria-label="Close instructor profile">x</button>
+      <div id="profileContent"></div>
+    </div>
+  </dialog>
+
+  <dialog class="booking-modal" id="paymentModal">
+    <form method="dialog" class="modal-card" id="paymentForm">
+      <button class="icon-button close-modal" type="button" id="closePayment" aria-label="Close payment form">x</button>
+      <div id="paymentSummary"></div>
+      <div class="success-message" id="paymentMessage"></div>
+      <button type="submit">Continue to secure checkout</button>
+      <p class="calendar-note">You will be sent to the payment provider to complete the lesson payment securely.</p>
+    </form>
+  </dialog>
+
+  <dialog class="booking-modal" id="authModal">
+    <form method="dialog" class="modal-card" id="authForm">
+      <button class="icon-button close-modal" type="button" id="closeAuth" aria-label="Close login form">x</button>
+      <div>
+        <p class="eyebrow">Before your first booking</p>
+        <h2>Sign up or log in</h2>
+        <p>Save your details once so instructors know who is requesting a lesson.</p>
+      </div>
+      <label>
+        Name
+        <input id="authName" type="text" required placeholder="Your name">
+      </label>
+      <label>
+        Email
+        <input id="authEmail" type="email" required placeholder="you@example.com">
+      </label>
+      <button type="submit">Continue booking</button>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+  <script>
+    let teachers = [
+      {
+        id: 1,
+        name: "Maya Quinn",
+        email: "maya@soundslot.example",
+        instrument: "Piano",
+        type: "In studio",
+        area: "Dublin 2",
+        price: 45,
+        rating: 4.98,
+        reviews: 142,
+        levels: ["Beginner", "Intermediate", "Advanced"],
+        tags: ["Kids", "Adults", "Exams"],
+        style: "Classical, pop and grade exams",
+        bio: "Maya helps students build confident technique without making lessons feel stiff. She teaches exam prep, sight-reading, pop arrangements and first-time piano basics.",
+        likes: 84,
+        reviewsList: [
+          { name: "Sophie", rating: 5, text: "Maya made grade theory finally click for my daughter." },
+          { name: "Daniel", rating: 5, text: "Calm, organised and brilliant at explaining rhythm." }
+        ],
+        image: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=900&q=80",
+        slots: [
+          { id: "maya-2026-05-18-1600", date: "2026-05-18", day: "Mon", label: "18 May", time: "16:00" },
+          { id: "maya-2026-05-19-1830", date: "2026-05-19", day: "Tue", label: "19 May", time: "18:30" },
+          { id: "maya-2026-05-21-1715", date: "2026-05-21", day: "Thu", label: "21 May", time: "17:15" }
+        ]
+      },
+      {
+        id: 2,
+        name: "Leo Byrne",
+        email: "leo@soundslot.example",
+        instrument: "Guitar",
+        type: "Online",
+        area: "Online",
+        price: 32,
+        rating: 4.91,
+        reviews: 96,
+        levels: ["Beginner", "Intermediate"],
+        tags: ["Adults", "Performance"],
+        style: "Acoustic, rock and songwriting",
+        bio: "Leo works with beginners and returning guitar players who want useful chords, timing and songs they actually enjoy playing.",
+        likes: 61,
+        reviewsList: [
+          { name: "Niamh", rating: 5, text: "I learned three songs in my first month." },
+          { name: "Oscar", rating: 4, text: "Great balance of technique and fun." }
+        ],
+        image: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=900&q=80",
+        slots: [
+          { id: "leo-2026-05-17-1100", date: "2026-05-17", day: "Sun", label: "17 May", time: "11:00" },
+          { id: "leo-2026-05-20-1900", date: "2026-05-20", day: "Wed", label: "20 May", time: "19:00" },
+          { id: "leo-2026-05-22-1330", date: "2026-05-22", day: "Fri", label: "22 May", time: "13:30" }
+        ]
+      },
+      {
+        id: 3,
+        name: "Amara Stone",
+        email: "amara@soundslot.example",
+        instrument: "Singing",
+        type: "At your home",
+        area: "Dublin 8",
+        price: 55,
+        rating: 4.96,
+        reviews: 118,
+        levels: ["Beginner", "Intermediate", "Advanced"],
+        tags: ["Kids", "Adults", "Performance"],
+        style: "Vocal confidence and stage technique",
+        bio: "Amara coaches singers on breath, tone, range and performance nerves. Lessons are practical, warm and built around each student's voice.",
+        likes: 97,
+        reviewsList: [
+          { name: "Grace", rating: 5, text: "I felt comfortable singing in front of someone for the first time." },
+          { name: "Mark", rating: 5, text: "Excellent warmups and really useful stage advice." }
+        ],
+        image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+        slots: [
+          { id: "amara-2026-05-18-1230", date: "2026-05-18", day: "Mon", label: "18 May", time: "12:30" },
+          { id: "amara-2026-05-21-1800", date: "2026-05-21", day: "Thu", label: "21 May", time: "18:00" },
+          { id: "amara-2026-05-23-1000", date: "2026-05-23", day: "Sat", label: "23 May", time: "10:00" }
+        ]
+      },
+      {
+        id: 4,
+        name: "Noah Farrell",
+        email: "noah@soundslot.example",
+        instrument: "Drums",
+        type: "In studio",
+        area: "Rathmines",
+        price: 40,
+        rating: 4.87,
+        reviews: 73,
+        levels: ["Beginner", "Intermediate"],
+        tags: ["Kids", "Adults"],
+        style: "Groove, rhythm reading and band prep",
+        bio: "Noah teaches groove, coordination and reading for students who want to play with bands, improve timing or start drums from scratch.",
+        likes: 48,
+        reviewsList: [
+          { name: "Ella", rating: 5, text: "My son comes home buzzing after every lesson." },
+          { name: "Ben", rating: 4, text: "Clear practice plans and a great studio setup." }
+        ],
+        image: "https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?auto=format&fit=crop&w=900&q=80",
+        slots: [
+          { id: "noah-2026-05-19-1500", date: "2026-05-19", day: "Tue", label: "19 May", time: "15:00" },
+          { id: "noah-2026-05-20-1730", date: "2026-05-20", day: "Wed", label: "20 May", time: "17:30" },
+          { id: "noah-2026-05-23-1400", date: "2026-05-23", day: "Sat", label: "23 May", time: "14:00" }
+        ]
+      },
+      {
+        id: 5,
+        name: "Eva Novak",
+        email: "eva@soundslot.example",
+        instrument: "Violin",
+        type: "Online",
+        area: "Online",
+        price: 50,
+        rating: 4.94,
+        reviews: 88,
+        levels: ["Intermediate", "Advanced"],
+        tags: ["Exams", "Performance"],
+        style: "Technique, orchestral auditions and theory",
+        bio: "Eva specialises in violin technique, tone production and audition preparation for committed intermediate and advanced players.",
+        likes: 72,
+        reviewsList: [
+          { name: "Ava", rating: 5, text: "Eva fixed habits I had struggled with for years." },
+          { name: "Milos", rating: 5, text: "Detailed, precise and very encouraging." }
+        ],
+        image: "https://images.unsplash.com/photo-1465821185615-20b3c2fbf41b?auto=format&fit=crop&w=900&q=80",
+        slots: [
+          { id: "eva-2026-05-17-1530", date: "2026-05-17", day: "Sun", label: "17 May", time: "15:30" },
+          { id: "eva-2026-05-20-1200", date: "2026-05-20", day: "Wed", label: "20 May", time: "12:00" },
+          { id: "eva-2026-05-22-1645", date: "2026-05-22", day: "Fri", label: "22 May", time: "16:45" }
+        ]
+      },
+      {
+        id: 6,
+        name: "Kai Morgan",
+        email: "kai@soundslot.example",
+        instrument: "DJ",
+        type: "In studio",
+        area: "Temple Bar",
+        price: 60,
+        rating: 4.89,
+        reviews: 64,
+        levels: ["Beginner", "Intermediate", "Advanced"],
+        tags: ["Adults", "Performance"],
+        style: "Mixing, decks, rekordbox and live sets",
+        bio: "Kai teaches club-ready mixing, library prep, transitions and set building for beginners through to performers preparing live sets.",
+        likes: 56,
+        reviewsList: [
+          { name: "Jamie", rating: 5, text: "The lesson felt like a real booth session." },
+          { name: "Priya", rating: 4, text: "Really helpful for organising my first set." }
+        ],
+        image: "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb3?auto=format&fit=crop&w=900&q=80",
+        slots: [
+          { id: "kai-2026-05-18-2000", date: "2026-05-18", day: "Mon", label: "18 May", time: "20:00" },
+          { id: "kai-2026-05-21-2000", date: "2026-05-21", day: "Thu", label: "21 May", time: "20:00" },
+          { id: "kai-2026-05-23-1830", date: "2026-05-23", day: "Sat", label: "23 May", time: "18:30" }
+        ]
+      }
+    ];
+    const defaultTeachers = teachers.map(teacher => ({
+      ...teacher,
+      instruments: [...(teacher.instruments || [teacher.instrument])],
+      levels: [...teacher.levels],
+      tags: [...teacher.tags],
+      reviewsList: [...teacher.reviewsList],
+      slots: [...teacher.slots]
+    }));
+
+    const grid = document.getElementById("teacherGrid");
+    const resultCount = document.getElementById("resultCount");
+    const instrumentFilter = document.getElementById("instrumentFilter");
+    const typeFilter = document.getElementById("typeFilter");
+    const searchInput = document.getElementById("searchInput");
+    const priceFilter = document.getElementById("priceFilter");
+    const priceLabel = document.getElementById("priceLabel");
+    const sortFilter = document.getElementById("sortFilter");
+    const bookingModal = document.getElementById("bookingModal");
+    const modalTeacher = document.getElementById("modalTeacher");
+    const calendarGrid = document.getElementById("calendarGrid");
+    const daySlotList = document.getElementById("daySlotList");
+    const calendarMonthLabel = document.getElementById("calendarMonthLabel");
+    const prevMonth = document.getElementById("prevMonth");
+    const nextMonth = document.getElementById("nextMonth");
+    const calendarNote = document.getElementById("calendarNote");
+    const bookingForm = document.getElementById("bookingForm");
+    const bookingList = document.getElementById("bookingList");
+    const profileModal = document.getElementById("profileModal");
+    const profileContent = document.getElementById("profileContent");
+    const paymentModal = document.getElementById("paymentModal");
+    const paymentForm = document.getElementById("paymentForm");
+    const paymentSummary = document.getElementById("paymentSummary");
+    const paymentMessage = document.getElementById("paymentMessage");
+    const authModal = document.getElementById("authModal");
+    const authForm = document.getElementById("authForm");
+    let selectedTeacher = null;
+    let selectedSlot = null;
+    let selectedDateKey = null;
+    let calendarMonth = new Date();
+    let selectedPaymentIndex = null;
+    let pendingBookingAfterAuth = false;
+    let marketplaceSyncing = false;
+
+    const instructorAvailability = {
+      1: { days: [1, 2, 4], times: ["10:00", "12:00", "16:00", "18:30"] },
+      2: { days: [0, 3, 5], times: ["09:30", "11:00", "13:30", "19:00"] },
+      3: { days: [1, 4, 6], times: ["10:00", "12:30", "15:30", "18:00"] },
+      4: { days: [2, 3, 6], times: ["11:00", "15:00", "17:30"] },
+      5: { days: [0, 3, 5], times: ["12:00", "15:30", "16:45"] },
+      6: { days: [1, 4, 6], times: ["14:00", "18:30", "20:00"] }
+    };
+
+    function teacherInstruments(teacher) {
+      return teacher.instruments || [teacher.instrument];
+    }
+
+    function findTeacher(teacherId) {
+      return teachers.find(teacher => String(teacher.id) === String(teacherId));
+    }
+
+    function populateInstrumentFilter(instruments) {
+      const selected = instrumentFilter.value || "all";
+      instrumentFilter.innerHTML = [
+        `<option value="all">Any instrument</option>`,
+        ...instruments.map(instrument => `<option value="${instrument}">${instrument}</option>`)
+      ].join("");
+      instrumentFilter.value = [...instrumentFilter.options].some(option => option.value === selected) ? selected : "all";
+    }
+
+    function checkedValues(name) {
+      return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input => input.value);
+    }
+
+    function filteredTeachers() {
+      const query = searchInput.value.trim().toLowerCase();
+      const selectedLevels = checkedValues("level");
+      const selectedTags = checkedValues("tag");
+      const maxPrice = Number(priceFilter.value);
+
+      let result = teachers.filter(teacher => {
+        const instruments = teacherInstruments(teacher);
+        const searchable = `${teacher.name} ${instruments.join(" ")} ${teacher.area} ${teacher.style}`.toLowerCase();
+        const matchesInstrument = instrumentFilter.value === "all" || instruments.includes(instrumentFilter.value);
+        const matchesType = typeFilter.value === "all" || teacher.type === typeFilter.value;
+        const matchesQuery = !query || searchable.includes(query);
+        const matchesPrice = teacher.price <= maxPrice;
+        const matchesLevel = selectedLevels.length === 0 || selectedLevels.some(level => teacher.levels.includes(level));
+        const matchesTag = selectedTags.length === 0 || selectedTags.some(tag => teacher.tags.includes(tag));
+        return matchesInstrument && matchesType && matchesQuery && matchesPrice && matchesLevel && matchesTag;
+      });
+
+      if (sortFilter.value === "rating") {
+        result.sort((a, b) => b.rating - a.rating);
+      }
+      if (sortFilter.value === "price") {
+        result.sort((a, b) => a.price - b.price);
+      }
+
+      return result;
+    }
+
+    function renderTeachers() {
+      const result = filteredTeachers();
+      resultCount.textContent = `${result.length} teacher${result.length === 1 ? "" : "s"} found`;
+      grid.innerHTML = result.map(teacher => `
+        <article class="teacher-card" data-profile="${teacher.id}" tabindex="0" role="button" aria-label="View ${teacher.name}'s profile">
+          <img src="${teacher.image}" alt="${teacher.instrument} lesson with ${teacher.name}">
+          <div class="teacher-body">
+            <div class="teacher-title">
+              <div>
+                <h3>${teacher.name}</h3>
+                <p>${teacherInstruments(teacher).join(", ")} - ${teacher.area}</p>
+              </div>
+              <strong>&euro;${teacher.price}</strong>
+            </div>
+            <p>${teacher.style}</p>
+            <div class="pill-row">
+              <span>${teacher.type}</span>
+              <span>${teacher.levels[0]}+</span>
+              <span>${teacher.rating} stars</span>
+            </div>
+            <div class="teacher-actions">
+              <span>${teacher.reviews} reviews</span>
+              <button class="secondary-button" type="button" data-profile-button="${teacher.id}">Profile</button>
+              <button type="button" data-book="${teacher.id}">Book</button>
+            </div>
+          </div>
+        </article>
+      `).join("") || `<div class="empty-state">No teachers match those filters yet. Try widening your search.</div>`;
+    }
+
+    function storedBookings() {
+      return JSON.parse(localStorage.getItem("soundslotBookings") || "[]");
+    }
+
+    function saveBookings(bookings) {
+      localStorage.setItem("soundslotBookings", JSON.stringify(bookings));
+    }
+
+    function currentUser() {
+      return JSON.parse(localStorage.getItem("soundslotCurrentUser") || "null");
+    }
+
+    function hasCompletedFirstBookingAuth() {
+      return localStorage.getItem("soundslotFirstBookingAuthComplete") === "true";
+    }
+
+    async function sharedBookings() {
+      try {
+        const response = await fetch("/api/bookings");
+        if (!response.ok) throw new Error("No booking API");
+        const data = await response.json();
+        saveBookings(data.bookings || []);
+        return data.bookings || [];
+      } catch {
+        return storedBookings();
+      }
+    }
+
+    async function saveSharedBooking(booking) {
+      try {
+        const response = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(booking)
+        });
+        if (!response.ok) throw new Error("No booking API");
+        const data = await response.json();
+        saveBookings(data.bookings || []);
+        return data.booking;
+      } catch {
+        const bookings = storedBookings();
+        bookings.push(booking);
+        saveBookings(bookings);
+        return booking;
+      }
+    }
+
+    async function updateSharedBooking(bookingId, changes) {
+      try {
+        const response = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changes)
+        });
+        if (!response.ok) throw new Error("No booking API");
+        const data = await response.json();
+        saveBookings(data.bookings || []);
+        return data.booking;
+      } catch {
+        const bookings = storedBookings();
+        const booking = bookings.find(item => item.id === bookingId);
+        if (booking) Object.assign(booking, changes, { updatedAt: new Date().toISOString() });
+        saveBookings(bookings);
+        return booking;
+      }
+    }
+
+    async function loadSharedTeachers() {
+      try {
+        const response = await fetch("/api/teachers");
+        if (!response.ok) throw new Error("No teacher API");
+        const data = await response.json();
+        const sharedTeachers = (data.teachers || []).map(profile => ({
+          ...profile,
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          instrument: profile.instrument || (profile.instruments || [])[0],
+          instruments: profile.instruments || [profile.instrument].filter(Boolean),
+          type: profile.type || "Online",
+          area: profile.area || "Online",
+          price: Number(profile.price || 40),
+          rating: Number(profile.rating || 0),
+          reviews: Number(profile.reviews || 0),
+          levels: profile.levels || ["Beginner", "Intermediate"],
+          tags: profile.tags || ["Adults"],
+          style: profile.bio || "Independent SoundSlot instructor",
+          bio: profile.bio || "This instructor has not added a full bio yet.",
+          likes: Number(profile.likes || 0),
+          reviewsList: profile.reviewsList || [],
+          image: profile.image || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80"
+        }));
+        teachers = [...defaultTeachers, ...sharedTeachers];
+      } catch {
+        const localProfiles = JSON.parse(localStorage.getItem("soundslotTeacherProfiles") || "[]");
+        const localTeachers = localProfiles.map(profile => ({
+          ...profile,
+          instrument: profile.instrument || (profile.instruments || [])[0],
+          instruments: profile.instruments || [profile.instrument].filter(Boolean),
+          type: profile.type || "Online",
+          area: profile.area || "Online",
+          price: Number(profile.price || 40),
+          rating: 0,
+          reviews: 0,
+          levels: ["Beginner", "Intermediate"],
+          tags: ["Adults"],
+          style: profile.bio || "Independent SoundSlot instructor",
+          bio: profile.bio || "This instructor has not added a full bio yet.",
+          likes: 0,
+          reviewsList: [],
+          image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80"
+        }));
+        teachers = [...defaultTeachers, ...localTeachers];
+      }
+    }
+
+    async function syncMarketplace() {
+      if (marketplaceSyncing) return;
+      marketplaceSyncing = true;
+      try {
+        await loadSharedTeachers();
+        renderTeachers();
+        await renderBookings();
+        if (bookingModal.open && selectedTeacher) {
+          selectedTeacher = findTeacher(selectedTeacher.id);
+          if (!selectedTeacher) {
+            bookingModal.close();
+          } else {
+            renderCalendar();
+            if (selectedDateKey) {
+              const [year, month, day] = selectedDateKey.split("-").map(Number);
+              renderDaySlots(new Date(year, month - 1, day));
+            }
+          }
+        }
+      } finally {
+        marketplaceSyncing = false;
+      }
+    }
+
+    function paymentSplit(amount) {
+      const gross = Math.round(Number(amount || 0) * 100) / 100;
+      const appFeeRate = 0.015;
+      const appFee = Math.round(gross * appFeeRate * 100) / 100;
+      return {
+        gross,
+        appFeeRate,
+        appFee,
+        instructorPayout: Math.round((gross - appFee) * 100) / 100
+      };
+    }
+
+    function storedProfileActivity() {
+      return JSON.parse(localStorage.getItem("soundslotProfileActivity") || "{}");
+    }
+
+    function saveProfileActivity(activity) {
+      localStorage.setItem("soundslotProfileActivity", JSON.stringify(activity));
+    }
+
+    function activityForTeacher(teacherId) {
+      const activity = storedProfileActivity();
+      return activity[teacherId] || { liked: false, extraLikes: 0, comments: [] };
+    }
+
+    function isSlotBooked(teacherId, slotId) {
+      return storedBookings().some(booking => {
+        const activeStatus = !["declined", "cancelled"].includes(booking.status);
+        return booking.teacherId === teacherId && booking.slotId === slotId && activeStatus;
+      });
+    }
+
+    function startOfDay(date) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }
+
+    function addMonths(date, amount) {
+      return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+    }
+
+    function dateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function monthName(date) {
+      return date.toLocaleDateString("en-IE", { month: "long", year: "numeric" });
+    }
+
+    function slotFromDateTime(teacher, date, time) {
+      const [hours, minutes] = time.split(":").map(Number);
+      const startsAt = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes);
+      const key = dateKey(startsAt);
+      return {
+        id: `${teacher.id}-${key}-${time.replace(":", "")}`,
+        date: key,
+        day: startsAt.toLocaleDateString("en-IE", { weekday: "short" }),
+        label: startsAt.toLocaleDateString("en-IE", { day: "numeric", month: "short" }),
+        time,
+        startsAt
+      };
+    }
+
+    function scheduleForTeacher(teacher) {
+      if (instructorAvailability[teacher.id]) {
+        return instructorAvailability[teacher.id];
+      }
+
+      const dayNumbers = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6
+      };
+      const days = (teacher.workingDays || []).map(day => dayNumbers[day]).filter(day => day !== undefined);
+      const startTime = teacher.startTime || "09:00";
+      const endTime = teacher.endTime || "17:00";
+      const maxSlots = Math.max(1, Number(teacher.hoursPerDay || 4));
+      const [startHour, startMinute] = startTime.split(":").map(Number);
+      const [endHour, endMinute] = endTime.split(":").map(Number);
+      const startTotal = startHour * 60 + startMinute;
+      const endTotal = endHour * 60 + endMinute;
+      const times = [];
+
+      for (let minutes = startTotal; minutes < endTotal && times.length < maxSlots; minutes += 60) {
+        const hour = String(Math.floor(minutes / 60)).padStart(2, "0");
+        const minute = String(minutes % 60).padStart(2, "0");
+        times.push(`${hour}:${minute}`);
+      }
+
+      return { days, times };
+    }
+
+    function availableSlotsForDate(teacher, date) {
+      const schedule = scheduleForTeacher(teacher);
+      const minStart = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const maxStart = addMonths(new Date(), 6);
+
+      if (!schedule || schedule.days.length === 0 || !schedule.days.includes(date.getDay())) return [];
+
+      return schedule.times
+        .map(time => slotFromDateTime(teacher, date, time))
+        .filter(slot => slot.startsAt >= minStart && slot.startsAt < maxStart);
+    }
+
+    function hasSlotsInMonth(monthDate) {
+      const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+      const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+      for (let day = new Date(monthStart); day <= monthEnd; day.setDate(day.getDate() + 1)) {
+        if (availableSlotsForDate(selectedTeacher, day).length > 0) return true;
+      }
+      return false;
+    }
+
+    function renderDaySlots(date) {
+      selectedSlot = null;
+      const slots = availableSlotsForDate(selectedTeacher, date);
+      const openSlots = slots.filter(slot => !isSlotBooked(selectedTeacher.id, slot.id));
+
+      daySlotList.innerHTML = slots.map(slot => {
+        const booked = isSlotBooked(selectedTeacher.id, slot.id);
+        return `
+          <button
+            class="time-slot${booked ? " is-booked" : ""}"
+            type="button"
+            data-slot="${slot.id}"
+            ${booked ? "disabled" : ""}
+            aria-pressed="false">
+            <span>${slot.time}</span>
+            <small>${booked ? "Booked" : "Available"}</small>
+          </button>
+        `;
+      }).join("") || `<div class="empty-state">No bookable times on this day.</div>`;
+
+      calendarNote.textContent = openSlots.length
+        ? `${openSlots.length} available time${openSlots.length === 1 ? "" : "s"} on ${date.toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "long" })}.`
+        : "All times on this date are already booked. Choose another available day.";
+    }
+
+    function renderCalendar() {
+      selectedSlot = null;
+      daySlotList.innerHTML = "";
+      calendarMonthLabel.textContent = monthName(calendarMonth);
+
+      const today = startOfDay(new Date());
+      const firstDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+      const gridStart = new Date(firstDay);
+      gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+      const maxMonth = addMonths(new Date(), 5);
+      const minMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+      prevMonth.disabled = calendarMonth <= minMonth;
+      nextMonth.disabled = calendarMonth >= maxMonth;
+
+      calendarGrid.innerHTML = Array.from({ length: 42 }, (_, index) => {
+        const day = new Date(gridStart);
+        day.setDate(gridStart.getDate() + index);
+        const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+        const slots = availableSlotsForDate(selectedTeacher, day);
+        const openSlots = slots.filter(slot => !isSlotBooked(selectedTeacher.id, slot.id));
+        const dayKey = dateKey(day);
+        const disabled = !isCurrentMonth || day < today || slots.length === 0;
+        const isSelected = dayKey === selectedDateKey;
+
+        return `
+          <button
+            class="calendar-day${isCurrentMonth ? "" : " is-muted"}${openSlots.length ? " has-slots" : ""}${slots.length && openSlots.length === 0 ? " is-filled" : ""}${isSelected ? " is-selected" : ""}"
+            type="button"
+            data-date="${dayKey}"
+            ${disabled ? "disabled" : ""}>
+            <span>${day.getDate()}</span>
+            <small>${openSlots.length ? `${openSlots.length} open` : slots.length ? "Booked" : ""}</small>
+          </button>
+        `;
+      }).join("");
+
+      calendarNote.textContent = hasSlotsInMonth(calendarMonth)
+        ? "Select a calendar day, then choose one of the available times."
+        : "This instructor has no open times in this month. Try the next month.";
+    }
+
+    function openBooking(teacherId) {
+      selectedTeacher = findTeacher(teacherId);
+      calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      selectedDateKey = null;
+      modalTeacher.innerHTML = `
+        <p class="eyebrow">Book a lesson</p>
+        <h2>${selectedTeacher.name}</h2>
+        <p>${selectedTeacher.instrument} - ${selectedTeacher.type} - &euro;${selectedTeacher.price}</p>
+      `;
+      renderCalendar();
+      bookingModal.showModal();
+    }
+
+    function openProfile(teacherId) {
+      const teacher = findTeacher(teacherId);
+      const activity = activityForTeacher(teacher.id);
+      const totalLikes = teacher.likes + activity.extraLikes;
+      const comments = activity.comments;
+
+      profileContent.innerHTML = `
+        <div class="profile-hero">
+          <img src="${teacher.image}" alt="${teacher.name}">
+          <div>
+            <p class="eyebrow">${teacher.instrument} instructor</p>
+            <h2>${teacher.name}</h2>
+            <p>${teacher.area} - ${teacher.type} - &euro;${teacher.price} per lesson</p>
+            <div class="profile-score">
+              <strong>${teacher.rating}</strong>
+              <span>${teacher.reviews} reviews</span>
+              <span>${totalLikes} likes</span>
+            </div>
+            <div class="profile-actions">
+              <button type="button" data-like="${teacher.id}">${activity.liked ? "Liked" : "Like"}</button>
+              <button type="button" data-profile-book="${teacher.id}">Book this instructor</button>
+            </div>
+          </div>
+        </div>
+
+        <section class="profile-section">
+          <h3>About</h3>
+          <p>${teacher.bio}</p>
+          <div class="pill-row">
+            ${teacher.levels.map(level => `<span>${level}</span>`).join("")}
+            ${teacher.tags.map(tag => `<span>${tag}</span>`).join("")}
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <h3>Reviews</h3>
+          <div class="review-list">
+            ${teacher.reviewsList.map(review => `
+              <article class="review-item">
+                <div>
+                  <strong>${review.name}</strong>
+                  <span>${review.rating}/5 rating</span>
+                </div>
+                <p>${review.text}</p>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <h3>Comments</h3>
+          <div class="comment-list">
+            ${comments.map(comment => `
+              <article class="comment-item">
+                <strong>${comment.name}</strong>
+                <p>${comment.text}</p>
+              </article>
+            `).join("") || `<div class="empty-state">No extra comments yet. Add the first one.</div>`}
+          </div>
+          <form class="comment-form" data-comment-form="${teacher.id}">
+            <input type="text" name="commentName" placeholder="Your name" required>
+            <textarea name="commentText" rows="3" placeholder="Leave a comment" required></textarea>
+            <button type="submit">Post comment</button>
+          </form>
+        </section>
+      `;
+
+      if (!profileModal.open) {
+        profileModal.showModal();
+      }
+    }
+
+    async function renderBookings() {
+      const bookings = await sharedBookings();
+      const user = currentUser();
+      const visibleBookings = user ? bookings.filter(booking => booking.email === user.email) : bookings;
+      bookingList.innerHTML = visibleBookings.map(booking => {
+        const index = bookings.findIndex(item => item.id === booking.id);
+        return `
+        <article class="booking-item">
+          <div>
+            <h3>${booking.instrument} with ${booking.teacher}</h3>
+            <p>${booking.slot} - ${booking.name}</p>
+            <span>${booking.email}</span>
+            ${booking.price ? `<span>Lesson total: &euro;${Number(booking.price).toFixed(2)}</span>` : ""}
+            <span class="status-pill status-${booking.status || "pending"}">${booking.status || "pending instructor approval"}</span>
+            ${booking.paymentId ? `<span>Payment recorded: ${booking.paymentId}</span>` : ""}
+          </div>
+          ${booking.status === "accepted" && !booking.paymentId ? `<button type="button" data-pay="${index}">Pay</button>` : ""}
+          <button type="button" data-cancel="${index}">Cancel</button>
+        </article>
+      `;
+      }).join("") || `<div class="empty-state">No booking requests yet. Pick a teacher and your request will appear here.</div>`;
+    }
+
+    function openPayment(index) {
+      const booking = storedBookings()[index];
+      const split = paymentSplit(booking.price);
+      selectedPaymentIndex = index;
+      paymentSummary.innerHTML = `
+        <p class="eyebrow">Lesson payment</p>
+        <h2>${booking.instrument} with ${booking.teacher}</h2>
+        <p>${booking.slot}</p>
+        <div class="fee-breakdown">
+          <div><span>Lesson total</span><strong>&euro;${split.gross.toFixed(2)}</strong></div>
+          <div><span>App fee (${(split.appFeeRate * 100).toFixed(1)}%)</span><strong>&euro;${split.appFee.toFixed(2)}</strong></div>
+          <div><span>Instructor payout</span><strong>&euro;${split.instructorPayout.toFixed(2)}</strong></div>
+        </div>
+      `;
+      paymentMessage.textContent = "";
+      paymentMessage.classList.remove("is-visible");
+      paymentModal.showModal();
+    }
+
+    async function submitBookingRequest() {
+      const booking = {
+        id: `booking-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        teacherId: selectedTeacher.id,
+        teacher: selectedTeacher.name,
+        teacherEmail: selectedTeacher.email,
+        instrument: selectedTeacher.instrument,
+        price: selectedTeacher.price,
+        slotId: selectedSlot.id,
+        slot: `${selectedSlot.day} ${selectedSlot.label}, ${selectedSlot.time}`,
+        slotDate: selectedSlot.date,
+        slotTime: selectedSlot.time,
+        userId: currentUser()?.id || "",
+        name: document.getElementById("studentName").value,
+        email: document.getElementById("studentEmail").value,
+        goal: document.getElementById("lessonGoal").value,
+        status: "pending",
+        requestedAt: new Date().toISOString()
+      };
+
+      await saveSharedBooking(booking);
+      bookingForm.reset();
+      selectedSlot = null;
+      bookingModal.close();
+      await syncMarketplace();
+      document.getElementById("bookings").scrollIntoView({ behavior: "smooth" });
+    }
+
+    document.getElementById("searchForm").addEventListener("submit", event => {
+      event.preventDefault();
+      renderTeachers();
+      document.getElementById("discover").scrollIntoView({ behavior: "smooth" });
+    });
+
+    [instrumentFilter, typeFilter, searchInput, priceFilter, sortFilter, ...document.querySelectorAll("input[type='checkbox']")].forEach(control => {
+      control.addEventListener("input", () => {
+        priceLabel.textContent = `Up to \u20ac${priceFilter.value}`;
+        renderTeachers();
+      });
+    });
+
+    document.getElementById("clearFilters").addEventListener("click", () => {
+      instrumentFilter.value = "all";
+      typeFilter.value = "all";
+      searchInput.value = "";
+      priceFilter.value = 90;
+      sortFilter.value = "recommended";
+      document.querySelectorAll("input[type='checkbox']").forEach(input => input.checked = false);
+      priceLabel.textContent = "Up to \u20ac90";
+      renderTeachers();
+    });
+
+    grid.addEventListener("click", event => {
+      const bookButton = event.target.closest("[data-book]");
+      if (bookButton) {
+        openBooking(bookButton.dataset.book);
+        return;
+      }
+
+      const profileButton = event.target.closest("[data-profile-button]");
+      if (profileButton) {
+        openProfile(profileButton.dataset.profileButton);
+        return;
+      }
+
+      const card = event.target.closest("[data-profile]");
+      if (card) openProfile(card.dataset.profile);
+    });
+
+    grid.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const card = event.target.closest("[data-profile]");
+      if (!card) return;
+      event.preventDefault();
+      openProfile(card.dataset.profile);
+    });
+
+    document.getElementById("closeModal").addEventListener("click", () => bookingModal.close());
+    document.getElementById("closeProfile").addEventListener("click", () => profileModal.close());
+
+    profileContent.addEventListener("click", event => {
+      const likeButton = event.target.closest("[data-like]");
+      if (likeButton) {
+        const teacherId = likeButton.dataset.like;
+        const activity = storedProfileActivity();
+        const current = activity[teacherId] || { liked: false, extraLikes: 0, comments: [] };
+        current.liked = !current.liked;
+        current.extraLikes += current.liked ? 1 : -1;
+        activity[teacherId] = current;
+        saveProfileActivity(activity);
+        openProfile(teacherId);
+        return;
+      }
+
+      const bookButton = event.target.closest("[data-profile-book]");
+      if (bookButton) {
+        profileModal.close();
+        openBooking(bookButton.dataset.profileBook);
+      }
+    });
+
+    profileContent.addEventListener("submit", event => {
+      const form = event.target.closest("[data-comment-form]");
+      if (!form) return;
+      event.preventDefault();
+
+      const teacherId = form.dataset.commentForm;
+      const activity = storedProfileActivity();
+      const current = activity[teacherId] || { liked: false, extraLikes: 0, comments: [] };
+      current.comments.push({
+        name: form.elements.commentName.value,
+        text: form.elements.commentText.value
+      });
+      activity[teacherId] = current;
+      saveProfileActivity(activity);
+      openProfile(teacherId);
+    });
+
+    prevMonth.addEventListener("click", () => {
+      calendarMonth = addMonths(calendarMonth, -1);
+      selectedDateKey = null;
+      renderCalendar();
+    });
+
+    nextMonth.addEventListener("click", () => {
+      calendarMonth = addMonths(calendarMonth, 1);
+      selectedDateKey = null;
+      renderCalendar();
+    });
+
+    calendarGrid.addEventListener("click", event => {
+      const button = event.target.closest("[data-date]");
+      if (!button || button.disabled) return;
+
+      selectedDateKey = button.dataset.date;
+      const [year, month, day] = selectedDateKey.split("-").map(Number);
+      renderCalendar();
+      renderDaySlots(new Date(year, month - 1, day));
+    });
+
+    daySlotList.addEventListener("click", event => {
+      const button = event.target.closest("[data-slot]");
+      if (!button || button.disabled) return;
+
+      const [year, month, day] = selectedDateKey.split("-").map(Number);
+      selectedSlot = availableSlotsForDate(selectedTeacher, new Date(year, month - 1, day))
+        .find(slot => slot.id === button.dataset.slot);
+
+      daySlotList.querySelectorAll(".time-slot").forEach(slotButton => {
+        slotButton.classList.remove("is-selected");
+        slotButton.setAttribute("aria-pressed", "false");
+      });
+      button.classList.add("is-selected");
+      button.setAttribute("aria-pressed", "true");
+      calendarNote.textContent = `${selectedSlot.day} ${selectedSlot.label} at ${selectedSlot.time} selected.`;
+    });
+
+    bookingForm.addEventListener("submit", event => {
+      event.preventDefault();
+      if (!selectedSlot) {
+        calendarNote.textContent = "Please choose an available calendar time before confirming.";
+        return;
+      }
+
+      if (isSlotBooked(selectedTeacher.id, selectedSlot.id)) {
+        calendarNote.textContent = "That time has just been booked. Please choose another available slot.";
+        renderCalendar();
+        return;
+      }
+
+      const user = currentUser();
+      if (!hasCompletedFirstBookingAuth()) {
+        pendingBookingAfterAuth = true;
+        document.getElementById("authName").value = document.getElementById("studentName").value || user?.name || "";
+        document.getElementById("authEmail").value = document.getElementById("studentEmail").value || user?.email || "";
+        authModal.showModal();
+        return;
+      }
+
+      submitBookingRequest();
+    });
+
+    document.getElementById("closeAuth").addEventListener("click", () => {
+      pendingBookingAfterAuth = false;
+      authModal.close();
+    });
+
+    authForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const user = {
+        name: document.getElementById("authName").value,
+        email: document.getElementById("authEmail").value,
+        signedInAt: new Date().toISOString()
+      };
+      localStorage.setItem("soundslotCurrentUser", JSON.stringify(user));
+      localStorage.setItem("soundslotFirstBookingAuthComplete", "true");
+      document.getElementById("studentName").value = user.name;
+      document.getElementById("studentEmail").value = user.email;
+      authModal.close();
+      if (pendingBookingAfterAuth) {
+        pendingBookingAfterAuth = false;
+        submitBookingRequest();
+      }
+    });
+
+    bookingList.addEventListener("click", async event => {
+      const payButton = event.target.closest("[data-pay]");
+      if (payButton) {
+        openPayment(Number(payButton.dataset.pay));
+        return;
+      }
+
+      const button = event.target.closest("[data-cancel]");
+      if (!button) return;
+      const bookings = storedBookings();
+      const booking = bookings[Number(button.dataset.cancel)];
+      if (!booking) return;
+      await updateSharedBooking(booking.id, { status: "cancelled", cancelledAt: new Date().toISOString() });
+      await syncMarketplace();
+    });
+
+    document.getElementById("closePayment").addEventListener("click", () => paymentModal.close());
+
+    paymentForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const bookings = storedBookings();
+      const booking = bookings[selectedPaymentIndex];
+      if (!booking) return;
+      const split = paymentSplit(booking.price);
+
+      const paymentPayload = {
+        bookingId: booking.id,
+        teacher: booking.teacher,
+        teacherEmail: booking.teacherEmail,
+        studentName: booking.name,
+        studentEmail: booking.email,
+        instrument: booking.instrument,
+        slot: booking.slot,
+        amount: split.gross
+      };
+
+      try {
+        paymentMessage.textContent = "Creating secure checkout...";
+        paymentMessage.classList.add("is-visible");
+        const response = await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(paymentPayload)
+        });
+        const payment = await response.json();
+        if (!response.ok) throw new Error(payment.error || payment.setup || "Payment checkout unavailable");
+        if (!payment.checkoutUrl) throw new Error("The payment provider did not return a checkout link.");
+
+        await updateSharedBooking(booking.id, {
+          status: "payment_pending",
+          paymentId: payment.id,
+          appFee: payment.appFee,
+          instructorPayout: payment.instructorPayout,
+          checkoutStartedAt: new Date().toISOString()
+        });
+        window.location.href = payment.checkoutUrl;
+      } catch (error) {
+        paymentMessage.textContent = error.message;
+        paymentMessage.classList.add("is-visible");
+      }
+    });
+
+    async function initMarketplace() {
+      await loadSharedTeachers();
+      const instruments = await window.soundslotInstruments.list();
+      populateInstrumentFilter(instruments);
+      renderTeachers();
+      await renderBookings();
+    }
+
+    window.addEventListener("soundslot:instruments-updated", event => {
+      populateInstrumentFilter(event.detail);
+      renderTeachers();
+    });
+
+    window.addEventListener("storage", event => {
+      if (["soundslotTeacherProfiles", "soundslotBookings", "soundslotInstruments"].includes(event.key)) {
+        syncMarketplace();
+      }
+    });
+
+    window.addEventListener("focus", syncMarketplace);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) syncMarketplace();
+    });
+
+    initMarketplace();
+    setInterval(syncMarketplace, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSlot Account Settings</title>
+  <meta name="theme-color" content="#07164a">
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="icon" href="assets/soundslot-logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="account-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="SoundSlot home">
+      <img class="brand-logo" src="assets/soundslot-logo.png" alt="" aria-hidden="true">
+      <span>SoundSlot</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="index.html#discover">Find lessons</a>
+      <a href="index.html#bookings">My bookings</a>
+      <a href="signup.html">Teach music</a>
+      <a href="login.html">Login</a>
+      <a href="account.html">Account</a>
+      <a href="contact.html">Feedback</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="account-shell">
+    <section class="account-copy">
+      <p class="eyebrow">Account settings</p>
+      <h1>Make SoundSlot feel like yours.</h1>
+      <p id="accountUserSummary">Log in to manage your user account.</p>
+    </section>
+
+    <section class="settings-panel">
+      <div>
+        <p class="eyebrow">User account</p>
+        <h2>Login details</h2>
+      </div>
+      <div class="managed-profile" id="userAccountCard"></div>
+      <div class="form-actions">
+        <a class="primary-link" href="login.html">Sign up or log in</a>
+        <button class="secondary-button" type="button" id="deleteUserAccount">Delete my user account</button>
+      </div>
+      <div class="success-message" id="accountMessage"></div>
+    </section>
+
+    <form class="settings-panel" id="appearanceForm">
+      <div>
+        <p class="eyebrow">Appearance</p>
+        <h2>Display settings</h2>
+      </div>
+
+      <label>
+        Theme
+        <select id="themeSetting">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="highContrast">High contrast</option>
+        </select>
+      </label>
+
+      <fieldset class="swatch-field">
+        <legend>Accent color</legend>
+        <label><input type="radio" name="accentSetting" value="purple"> <span class="color-swatch purple"></span> Purple</label>
+        <label><input type="radio" name="accentSetting" value="blue"> <span class="color-swatch blue"></span> Blue</label>
+        <label><input type="radio" name="accentSetting" value="navy"> <span class="color-swatch navy"></span> Navy</label>
+        <label><input type="radio" name="accentSetting" value="magenta"> <span class="color-swatch magenta"></span> Magenta</label>
+      </fieldset>
+
+      <label>
+        Text size
+        <select id="textScaleSetting">
+          <option value="0.94">Small</option>
+          <option value="1">Default</option>
+          <option value="1.08">Large</option>
+          <option value="1.16">Extra large</option>
+        </select>
+      </label>
+
+      <label>
+        Layout density
+        <select id="densitySetting">
+          <option value="comfortable">Comfortable</option>
+          <option value="compact">Compact</option>
+          <option value="spacious">Spacious</option>
+        </select>
+      </label>
+
+      <label>
+        Image style
+        <select id="imageStyleSetting">
+          <option value="rounded">Rounded</option>
+          <option value="square">Square</option>
+          <option value="soft">Soft corners</option>
+        </select>
+      </label>
+
+      <label>
+        Motion
+        <select id="motionSetting">
+          <option value="on">On</option>
+          <option value="reduced">Reduced</option>
+        </select>
+      </label>
+
+      <div class="settings-preview">
+        <article class="teacher-card">
+          <img src="https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=900&q=80" alt="Guitar lesson preview">
+          <div class="teacher-body">
+            <div class="teacher-title">
+              <div>
+                <h3>Preview Teacher</h3>
+                <p>Guitar - Online</p>
+              </div>
+              <strong>&euro;42</strong>
+            </div>
+            <p>This preview updates as you change your settings.</p>
+            <div class="pill-row">
+              <span>Online</span>
+              <span>Beginner+</span>
+              <span>4.9 stars</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit">Save settings</button>
+        <button class="secondary-button" type="button" id="resetAppearance">Reset appearance</button>
+      </div>
+      <div class="success-message" id="settingsSuccess"></div>
+    </form>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    const accents = {
+      purple: { accent: "#9a5cff", accentDark: "#07164a" },
+      blue: { accent: "#4bb8ff", accentDark: "#07164a" },
+      navy: { accent: "#07164a", accentDark: "#020a24" },
+      magenta: { accent: "#c85cff", accentDark: "#07164a" }
+    };
+
+    const form = document.getElementById("appearanceForm");
+    const success = document.getElementById("settingsSuccess");
+    const accountMessage = document.getElementById("accountMessage");
+    const userAccountCard = document.getElementById("userAccountCard");
+    const accountUserSummary = document.getElementById("accountUserSummary");
+
+    function currentUser() {
+      return JSON.parse(localStorage.getItem("soundslotCurrentUser") || "null");
+    }
+
+    function renderUserAccount() {
+      const user = currentUser();
+      if (!user) {
+        accountUserSummary.textContent = "No user is logged in on this browser.";
+        userAccountCard.innerHTML = `
+          <div>
+            <h3>No user logged in</h3>
+            <p>Create or log into a user account to manage bookings and deletion.</p>
+          </div>
+        `;
+        return;
+      }
+
+      accountUserSummary.textContent = `Logged in as ${user.name}.`;
+      userAccountCard.innerHTML = `
+        <div>
+          <h3>${user.name}</h3>
+          <p>${user.email}</p>
+          <span>User ID: ${user.id || "local-only"}</span>
+        </div>
+      `;
+    }
+
+    function accentName(settings) {
+      return Object.entries(accents).find(([, value]) => value.accent === settings.accent)?.[0] || "purple";
+    }
+
+    function formSettings() {
+      const accent = accents[document.querySelector("input[name='accentSetting']:checked").value];
+      return {
+        theme: document.getElementById("themeSetting").value,
+        accent: accent.accent,
+        accentDark: accent.accentDark,
+        textScale: document.getElementById("textScaleSetting").value,
+        density: document.getElementById("densitySetting").value,
+        imageStyle: document.getElementById("imageStyleSetting").value,
+        motion: document.getElementById("motionSetting").value
+      };
+    }
+
+    function fillForm(settings) {
+      document.getElementById("themeSetting").value = settings.theme;
+      document.getElementById("textScaleSetting").value = settings.textScale;
+      document.getElementById("densitySetting").value = settings.density;
+      document.getElementById("imageStyleSetting").value = settings.imageStyle;
+      document.getElementById("motionSetting").value = settings.motion;
+      document.querySelector(`input[name='accentSetting'][value='${accentName(settings)}']`).checked = true;
+    }
+
+    fillForm(window.soundslotAppearance.savedAppearance());
+
+    form.addEventListener("input", () => {
+      window.soundslotAppearance.applyAppearance(formSettings());
+    });
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      window.soundslotAppearance.save(formSettings());
+      success.textContent = "Appearance settings saved on this device.";
+      success.classList.add("is-visible");
+    });
+
+    document.getElementById("resetAppearance").addEventListener("click", () => {
+      const defaults = window.soundslotAppearance.reset();
+      fillForm(defaults);
+      success.textContent = "Appearance settings reset.";
+      success.classList.add("is-visible");
+    });
+
+    document.getElementById("deleteUserAccount").addEventListener("click", async () => {
+      const user = currentUser();
+      if (!user?.id) {
+        accountMessage.textContent = "Log in with a saved user account before deleting.";
+        accountMessage.classList.add("is-visible");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/users/${encodeURIComponent(user.id)}`, { method: "DELETE" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not delete account");
+        localStorage.removeItem("soundslotCurrentUser");
+        localStorage.removeItem("soundslotFirstBookingAuthComplete");
+        accountMessage.textContent = "Your user account was deleted and removed from the admin dashboard.";
+        accountMessage.classList.add("is-visible");
+        renderUserAccount();
+      } catch (error) {
+        accountMessage.textContent = error.message;
+        accountMessage.classList.add("is-visible");
+      }
+    });
+
+    renderUserAccount();
+  </script>
+</body>
+</html>
