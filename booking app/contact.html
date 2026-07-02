@@ -22,7 +22,6 @@
       <a href="login.html">Login</a>
       <a href="account.html">Account</a>
       <a href="contact.html">Feedback</a>
-      <a href="admin.html">Admin</a>
     </nav>
   </header>
 
@@ -87,8 +86,8 @@
         Message
         <textarea id="donationMessage" rows="3" placeholder="Optional note for the developer"></textarea>
       </label>
-      <button type="submit">Donate to developer</button>
-      <p class="calendar-note">You will be sent to the payment provider to complete the donation securely.</p>
+      <button type="submit">Record donation pledge</button>
+      <p class="calendar-note">This saves your support note for the developers. No external checkout is used.</p>
       <div class="success-message" id="donationSuccess"></div>
     </form>
   </main>
@@ -100,17 +99,11 @@
     const donationSuccess = document.getElementById("donationSuccess");
     const developerEmail = "developers@soundslot.example";
 
-    const pageParams = new URLSearchParams(window.location.search);
-    if (pageParams.get("donation") === "success") {
-      donationSuccess.textContent = "Thank you. Your donation checkout was completed.";
-      donationSuccess.classList.add("is-visible");
-    }
-
     function savedSuggestions() {
       return JSON.parse(localStorage.getItem("soundslotDeveloperSuggestions") || "[]");
     }
 
-    form.addEventListener("submit", event => {
+    form.addEventListener("submit", async event => {
       event.preventDefault();
 
       const suggestion = {
@@ -125,13 +118,26 @@
       suggestions.push(suggestion);
       localStorage.setItem("soundslotDeveloperSuggestions", JSON.stringify(suggestions));
 
+      try {
+        const response = await fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(suggestion)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not save feedback");
+      } catch (error) {
+        success.textContent = `${error.message}. A local copy was saved in this browser.`;
+        success.classList.add("is-visible");
+      }
+
       const subject = encodeURIComponent(`SoundSlot ${suggestion.type}`);
       const body = encodeURIComponent(
         `Name: ${suggestion.name}\nEmail: ${suggestion.email}\nType: ${suggestion.type}\n\n${suggestion.message}`
       );
       window.location.href = `mailto:${developerEmail}?subject=${subject}&body=${body}`;
 
-      success.textContent = "Your email app should open now. A local copy of this suggestion was also saved in the browser.";
+      success.textContent = "Your feedback was saved and your email app should open now.";
       success.classList.add("is-visible");
       form.reset();
     });
@@ -147,7 +153,7 @@
       };
 
       try {
-        donationSuccess.textContent = "Creating secure checkout...";
+        donationSuccess.textContent = "Saving donation pledge...";
         donationSuccess.classList.add("is-visible");
         const response = await fetch("/api/donations", {
           method: "POST",
@@ -155,9 +161,10 @@
           body: JSON.stringify(donation)
         });
         const savedDonation = await response.json();
-        if (!response.ok) throw new Error(savedDonation.error || savedDonation.setup || "Donation checkout unavailable");
-        if (!savedDonation.checkoutUrl) throw new Error("The payment provider did not return a checkout link.");
-        window.location.href = savedDonation.checkoutUrl;
+        if (!response.ok) throw new Error(savedDonation.error || "Donation pledge unavailable");
+        donationSuccess.textContent = "Thank you. Your donation pledge was saved for the developers.";
+        donationSuccess.classList.add("is-visible");
+        donationForm.reset();
       } catch (error) {
         donationSuccess.textContent = error.message;
         donationSuccess.classList.add("is-visible");

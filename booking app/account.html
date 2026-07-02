@@ -22,7 +22,6 @@
       <a href="login.html">Login</a>
       <a href="account.html">Account</a>
       <a href="contact.html">Feedback</a>
-      <a href="admin.html">Admin</a>
     </nav>
   </header>
 
@@ -44,6 +43,14 @@
         <button class="secondary-button" type="button" id="deleteUserAccount">Delete my user account</button>
       </div>
       <div class="success-message" id="accountMessage"></div>
+    </section>
+
+    <section class="settings-panel status-panel">
+      <div>
+        <p class="eyebrow">Status</p>
+        <h2>Your SoundSlot role</h2>
+      </div>
+      <div class="status-grid" id="accountStatus"></div>
     </section>
 
     <form class="settings-panel" id="appearanceForm">
@@ -148,6 +155,7 @@
     const accountMessage = document.getElementById("accountMessage");
     const userAccountCard = document.getElementById("userAccountCard");
     const accountUserSummary = document.getElementById("accountUserSummary");
+    const accountStatus = document.getElementById("accountStatus");
 
     function currentUser() {
       return JSON.parse(localStorage.getItem("soundslotCurrentUser") || "null");
@@ -173,6 +181,45 @@
           <p>${user.email}</p>
           <span>User ID: ${user.id || "local-only"}</span>
         </div>
+      `;
+    }
+
+    function ownedTeacherIds() {
+      return JSON.parse(localStorage.getItem("soundslotOwnedTeacherIds") || "[]");
+    }
+
+    async function loadTeachers() {
+      try {
+        const response = await fetch("/api/teachers");
+        if (!response.ok) throw new Error("No teacher API");
+        const data = await response.json();
+        return data.teachers || [];
+      } catch {
+        return JSON.parse(localStorage.getItem("soundslotTeacherProfiles") || "[]");
+      }
+    }
+
+    async function renderStatus() {
+      const user = currentUser();
+      const teachers = await loadTeachers();
+      const owned = new Set(ownedTeacherIds());
+      const instructorProfiles = user
+        ? teachers.filter(teacher => owned.has(teacher.id) || teacher.email?.toLowerCase() === user.email?.toLowerCase())
+        : [];
+      const isStudent = Boolean(user);
+      const isInstructor = instructorProfiles.length > 0;
+
+      accountStatus.innerHTML = `
+        <article class="status-card ${isStudent ? "is-active" : ""}">
+          <span>Student</span>
+          <strong>${isStudent ? "Active" : "Not signed in"}</strong>
+          <p>${isStudent ? "You can request lessons and track bookings from this browser." : "Log in to attach bookings to your account."}</p>
+        </article>
+        <article class="status-card ${isInstructor ? "is-active" : ""}">
+          <span>Instructor</span>
+          <strong>${isInstructor ? "Active" : "Not active"}</strong>
+          <p>${isInstructor ? `${instructorProfiles.length} teacher profile${instructorProfiles.length === 1 ? "" : "s"} linked to this account.` : "Create a teacher profile to appear as an instructor."}</p>
+        </article>
       `;
     }
 
@@ -236,9 +283,11 @@
         if (!response.ok) throw new Error(data.error || "Could not delete account");
         localStorage.removeItem("soundslotCurrentUser");
         localStorage.removeItem("soundslotFirstBookingAuthComplete");
-        accountMessage.textContent = "Your user account was deleted and removed from the admin dashboard.";
+        window.soundslotAuth?.refresh();
+        accountMessage.textContent = "Your user account was deleted.";
         accountMessage.classList.add("is-visible");
         renderUserAccount();
+        renderStatus();
       } catch (error) {
         accountMessage.textContent = error.message;
         accountMessage.classList.add("is-visible");
@@ -246,6 +295,12 @@
     });
 
     renderUserAccount();
+    renderStatus();
+    window.addEventListener("soundslot:auth-changed", () => {
+      renderUserAccount();
+      renderStatus();
+    });
+    window.soundslotLive?.subscribe(() => renderStatus());
   </script>
 </body>
 </html>

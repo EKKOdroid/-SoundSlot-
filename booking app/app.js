@@ -10,6 +10,7 @@ const defaultAppearance = {
 };
 const defaultInstruments = ["DJ", "Drums", "Guitar", "Piano", "Singing", "Violin"];
 const instrumentKey = "soundslotInstruments";
+const authKeys = ["soundslotCurrentUser", "soundslotFirstBookingAuthComplete"];
 
 function savedAppearance() {
   return {
@@ -30,6 +31,23 @@ function applyAppearance(settings = savedAppearance()) {
 }
 
 applyAppearance();
+
+function currentUser() {
+  return JSON.parse(localStorage.getItem("soundslotCurrentUser") || "null");
+}
+
+function updateAuthNavigation() {
+  document.querySelectorAll(".main-nav a[href='login.html']").forEach(link => {
+    link.hidden = Boolean(currentUser());
+  });
+}
+
+function announceAuthChange() {
+  updateAuthNavigation();
+  window.dispatchEvent(new CustomEvent("soundslot:auth-changed", { detail: currentUser() }));
+}
+
+updateAuthNavigation();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -115,4 +133,27 @@ window.soundslotInstruments = {
   list: fetchInstruments,
   add: addInstrument,
   sort: sortInstruments
+};
+
+window.soundslotAuth = {
+  currentUser,
+  refresh: announceAuthChange
+};
+
+window.addEventListener("storage", event => {
+  if (authKeys.includes(event.key)) announceAuthChange();
+});
+
+window.soundslotLive = {
+  subscribe(handler) {
+    if (!("EventSource" in window)) return null;
+    const events = new EventSource("/api/events");
+    events.addEventListener("soundslot-update", event => {
+      const detail = JSON.parse(event.data || "{}");
+      window.dispatchEvent(new CustomEvent("soundslot:data-updated", { detail }));
+      if (handler) handler(detail);
+    });
+    events.onerror = () => {};
+    return events;
+  }
 };

@@ -22,7 +22,6 @@
       <a href="login.html">Login</a>
       <a href="account.html">Account</a>
       <a href="contact.html">Feedback</a>
-      <a href="admin.html">Admin</a>
     </nav>
   </header>
 
@@ -30,7 +29,7 @@
     <section class="auth-copy">
       <p class="eyebrow">Student accounts</p>
       <h1>Sign up or log in to book lessons.</h1>
-      <p>Your account keeps your bookings attached to one profile and lets the admin dashboard track real users.</p>
+      <p>Your account keeps your bookings attached to one profile and helps instructors know who is requesting a lesson.</p>
       <div class="success-message" id="currentUserPanel"></div>
     </section>
 
@@ -95,6 +94,7 @@
     function saveUser(user) {
       localStorage.setItem("soundslotCurrentUser", JSON.stringify(user));
       localStorage.setItem("soundslotFirstBookingAuthComplete", "true");
+      window.soundslotAuth?.refresh();
       renderCurrentUser();
     }
 
@@ -168,6 +168,8 @@
 
     document.getElementById("logoutButton").addEventListener("click", () => {
       localStorage.removeItem("soundslotCurrentUser");
+      localStorage.removeItem("soundslotFirstBookingAuthComplete");
+      window.soundslotAuth?.refresh();
       loginMessage.textContent = "Logged out on this browser.";
       loginMessage.classList.add("is-visible");
       renderCurrentUser();

@@ -22,7 +22,6 @@
       <a href="login.html">Login</a>
       <a href="account.html">Account</a>
       <a href="contact.html">Feedback</a>
-      <a href="admin.html">Admin</a>
     </nav>
   </header>
 
@@ -571,6 +570,7 @@
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) refreshInstructorDashboard();
     });
+    window.soundslotLive?.subscribe(() => refreshInstructorDashboard());
     setInterval(refreshInstructorDashboard, 10000);
   </script>
 </body>

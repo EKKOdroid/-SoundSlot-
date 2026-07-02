@@ -6,12 +6,7 @@ const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, "data.json");
 const APP_VERSION = "1.3.0";
-const REVOLUT_API_BASE = process.env.REVOLUT_API_BASE || "https://merchant.revolut.com/api";
-const REVOLUT_API_VERSION = process.env.REVOLUT_API_VERSION || "2024-05-01";
-const REVOLUT_SECRET_KEY = process.env.REVOLUT_SECRET_KEY || "";
-const APP_BASE_URL = process.env.APP_BASE_URL || "";
-const ADMIN_OWNER = process.env.ADMIN_OWNER || "Alison";
-const ADMIN_KEY = process.env.ADMIN_KEY || "Alison2026!";
+const liveClients = new Set();
 
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -37,6 +32,7 @@ function readData() {
       bookings: [],
       payments: [],
       donations: [],
+      suggestions: [],
       ...JSON.parse(fs.readFileSync(DATA_FILE, "utf8"))
     };
   } catch {
@@ -46,13 +42,23 @@ function readData() {
       users: [],
       bookings: [],
       payments: [],
-      donations: []
+      donations: [],
+      suggestions: []
     };
   }
 }
 
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+function notifyDataChange(type, payload = {}) {
+  const message = `event: soundslot-update\ndata: ${JSON.stringify({
+    type,
+    timestamp: new Date().toISOString(),
+    ...payload
+  })}\n\n`;
+  liveClients.forEach(client => client.write(message));
 }
 
 function sortedUniqueInstruments(items) {
@@ -76,71 +82,6 @@ function paymentSplit(amount) {
   };
 }
 
-function minorUnits(amount) {
-  return Math.round(Number(amount || 0) * 100);
-}
-
-function appUrl(pathname, params = {}) {
-  if (!APP_BASE_URL) return undefined;
-  const url = new URL(pathname, APP_BASE_URL.replace(/\/$/, "") + "/");
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      url.searchParams.set(key, value);
-    }
-  });
-  return url.toString();
-}
-
-async function createRevolutOrder(payment, split, options = {}) {
-  if (!REVOLUT_SECRET_KEY) {
-    return null;
-  }
-
-  const redirectUrl = options.redirectUrl || appUrl("/payment-success.html", {
-    bookingId: payment.bookingId,
-    paymentId: payment.id
-  });
-  const itemName = options.itemName || `${payment.instrument} lesson`;
-  const description = options.description || `SoundSlot ${payment.instrument} lesson with ${payment.teacher}`;
-  const customer = {};
-  if (payment.studentEmail) customer.email = payment.studentEmail;
-  if (payment.studentName) customer.full_name = payment.studentName;
-
-  const response = await fetch(`${REVOLUT_API_BASE}/orders`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${REVOLUT_SECRET_KEY}`,
-      "Content-Type": "application/json",
-      "Revolut-Api-Version": REVOLUT_API_VERSION
-    },
-    body: JSON.stringify({
-      amount: minorUnits(split.gross),
-      currency: "EUR",
-      description,
-      redirect_url: redirectUrl,
-      customer,
-      merchant_order_data: {
-        reference: options.reference || payment.bookingId || payment.id
-      },
-      line_items: [
-        {
-          name: itemName,
-          type: "service",
-          quantity: { value: 1 },
-          unit_price_amount: minorUnits(split.gross),
-          total_amount: minorUnits(split.gross)
-        }
-      ]
-    })
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.message || data.error || "Revolut order failed");
-  }
-  return data;
-}
-
 function readRequestBody(request) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -161,15 +102,6 @@ function safePath(urlPath) {
   return filePath.startsWith(ROOT) ? filePath : null;
 }
 
-function isAdminRequest(request, url) {
-  const key = request.headers["x-admin-key"] || url.searchParams.get("adminKey");
-  return key === ADMIN_KEY;
-}
-
-function byNewest(items, key = "createdAt") {
-  return [...items].sort((a, b) => new Date(b[key] || 0) - new Date(a[key] || 0));
-}
-
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
@@ -184,56 +116,15 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (url.pathname === "/api/admin/overview" && request.method === "GET") {
-    if (!isAdminRequest(request, url)) {
-      sendJson(response, 401, { error: "Admin access code required" });
-      return;
-    }
-
-    const data = readData();
-    const teachers = data.teachers || [];
-    const users = data.users || [];
-    const bookings = data.bookings || [];
-    const payments = data.payments || [];
-    const donations = data.donations || [];
-    const paidPayments = payments.filter(payment => payment.status === "paid");
-    const paidDonationTotal = donations
-      .filter(donation => ["paid", "completed", "legacy_recorded"].includes(donation.status))
-      .reduce((total, donation) => total + Number(donation.amount || 0), 0);
-
-    sendJson(response, 200, {
-      owner: ADMIN_OWNER,
-      app: "SoundSlot",
-      version: APP_VERSION,
-      generatedAt: new Date().toISOString(),
-      paymentProvider: {
-        revolutConfigured: Boolean(REVOLUT_SECRET_KEY && APP_BASE_URL),
-        appBaseUrl: APP_BASE_URL || null,
-        appFeeRate: 0.015
-      },
-      metrics: {
-        teachers: teachers.length,
-        users: users.length,
-        instruments: (data.instruments || []).length,
-        bookings: bookings.length,
-        pendingBookings: bookings.filter(booking => booking.status === "pending").length,
-        acceptedBookings: bookings.filter(booking => booking.status === "accepted").length,
-        paidBookings: bookings.filter(booking => booking.status === "paid").length,
-        payments: payments.length,
-        paidPayments: paidPayments.length,
-        lessonGross: money(paidPayments.reduce((total, payment) => total + Number(payment.gross || 0), 0)),
-        appFees: money(paidPayments.reduce((total, payment) => total + Number(payment.appFee || 0), 0)),
-        instructorPayouts: money(paidPayments.reduce((total, payment) => total + Number(payment.instructorPayout || 0), 0)),
-        donations: donations.length,
-        donationTotal: money(paidDonationTotal)
-      },
-      teachers: byNewest(teachers, "updatedAt"),
-      users: byNewest(users, "updatedAt"),
-      bookings: byNewest(bookings, "updatedAt"),
-      payments: byNewest(payments, "createdAt"),
-      donations: byNewest(donations, "createdAt"),
-      instruments: sortedUniqueInstruments(data.instruments || [])
+  if (url.pathname === "/api/events" && request.method === "GET") {
+    response.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive"
     });
+    response.write(`event: soundslot-update\ndata: ${JSON.stringify({ type: "connected", timestamp: new Date().toISOString() })}\n\n`);
+    liveClients.add(response);
+    request.on("close", () => liveClients.delete(response));
     return;
   }
 
@@ -282,6 +173,7 @@ const server = http.createServer(async (request, response) => {
       data.users = [...(data.users || []).filter(item => item.id !== user.id), user];
       writeData(data);
       const { password: _password, ...safeUser } = user;
+      notifyDataChange("user-created", { userId: safeUser.id });
       sendJson(response, 201, { user: safeUser, users: data.users.map(({ password, ...item }) => item) });
     } catch {
       sendJson(response, 400, { error: "Invalid user account request" });
@@ -303,6 +195,7 @@ const server = http.createServer(async (request, response) => {
       user.lastLoginAt = new Date().toISOString();
       user.updatedAt = new Date().toISOString();
       writeData(data);
+      notifyDataChange("user-login", { userId: user.id });
       const { password: _password, ...safeUser } = user;
       sendJson(response, 200, { user: safeUser });
     } catch {
@@ -335,6 +228,7 @@ const server = http.createServer(async (request, response) => {
         };
       });
       writeData(data);
+      notifyDataChange("user-deleted", { userId });
       sendJson(response, 200, {
         deletedUserId: userId,
         users: data.users.map(({ password, ...user }) => user),
@@ -358,6 +252,7 @@ const server = http.createServer(async (request, response) => {
       const data = readData();
       data.instruments = sortedUniqueInstruments([...(data.instruments || []), instrument]);
       writeData(data);
+      notifyDataChange("instrument-created", { instrument });
       sendJson(response, 201, { instruments: data.instruments });
     } catch {
       sendJson(response, 400, { error: "Invalid instrument request" });
@@ -395,6 +290,7 @@ const server = http.createServer(async (request, response) => {
       data.teachers = [...(data.teachers || []).filter(item => item.id !== teacher.id), teacher];
       data.instruments = sortedUniqueInstruments([...(data.instruments || []), ...teacher.instruments]);
       writeData(data);
+      notifyDataChange("teacher-saved", { teacherId: teacher.id });
       sendJson(response, 201, { teacher, teachers: data.teachers });
     } catch {
       sendJson(response, 400, { error: "Invalid teacher profile" });
@@ -426,6 +322,7 @@ const server = http.createServer(async (request, response) => {
         };
       });
       writeData(data);
+      notifyDataChange("teacher-deleted", { teacherId });
       sendJson(response, 200, { deletedTeacherId: teacherId, teachers: data.teachers, bookings: data.bookings });
     } catch {
       sendJson(response, 400, { error: "Invalid teacher delete request" });
@@ -462,6 +359,7 @@ const server = http.createServer(async (request, response) => {
       };
       data.bookings = [...(data.bookings || []).filter(item => item.id !== booking.id), booking];
       writeData(data);
+      notifyDataChange("booking-created", { bookingId: booking.id, teacherId: booking.teacherId });
       sendJson(response, 201, { booking, bookings: data.bookings });
     } catch {
       sendJson(response, 400, { error: "Invalid booking request" });
@@ -482,6 +380,7 @@ const server = http.createServer(async (request, response) => {
 
       Object.assign(booking, body, { updatedAt: new Date().toISOString() });
       writeData(data);
+      notifyDataChange("booking-updated", { bookingId });
       sendJson(response, 200, { booking, bookings: data.bookings });
     } catch {
       sendJson(response, 400, { error: "Invalid booking update" });
@@ -498,14 +397,6 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      if (!REVOLUT_SECRET_KEY || !APP_BASE_URL) {
-        sendJson(response, 503, {
-          error: "Revolut payments are not configured",
-          setup: "Set REVOLUT_SECRET_KEY and a public HTTPS APP_BASE_URL on the server."
-        });
-        return;
-      }
-
       const data = readData();
       const payment = {
         id: `payment-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -516,53 +407,29 @@ const server = http.createServer(async (request, response) => {
         studentEmail: body.studentEmail,
         instrument: body.instrument,
         slot: body.slot,
-        status: "checkout_created",
+        status: "paid",
         ...split,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        completedAt: new Date().toISOString()
       };
-      const revolutOrder = await createRevolutOrder(payment, split);
-      payment.revolutOrderId = revolutOrder.id;
-      payment.revolutToken = revolutOrder.token;
-      payment.checkoutUrl = revolutOrder.checkout_url;
-      if (!payment.checkoutUrl) {
-        throw new Error("Revolut did not return a hosted checkout URL");
+      const booking = (data.bookings || []).find(item => item.id === payment.bookingId);
+      if (booking) {
+        Object.assign(booking, {
+          status: "paid",
+          paymentId: payment.id,
+          appFee: payment.appFee,
+          instructorPayout: payment.instructorPayout,
+          paidAt: payment.completedAt,
+          updatedAt: payment.completedAt
+        });
       }
       data.payments = [...(data.payments || []), payment];
       writeData(data);
-      sendJson(response, 201, payment);
+      notifyDataChange("payment-recorded", { paymentId: payment.id, bookingId: payment.bookingId });
+      sendJson(response, 201, { payment, booking });
     } catch (error) {
       sendJson(response, 400, { error: error.message || "Invalid or failed payment request" });
     }
-    return;
-  }
-
-  const paymentCompleteMatch = url.pathname.match(/^\/api\/payments\/([^/]+)\/complete$/);
-  if (paymentCompleteMatch && request.method === "PATCH") {
-    const data = readData();
-    const paymentId = decodeURIComponent(paymentCompleteMatch[1]);
-    const payment = (data.payments || []).find(item => item.id === paymentId);
-    if (!payment) {
-      sendJson(response, 404, { error: "Payment not found" });
-      return;
-    }
-
-    payment.status = "paid";
-    payment.completedAt = new Date().toISOString();
-
-    const booking = (data.bookings || []).find(item => item.id === payment.bookingId);
-    if (booking) {
-      Object.assign(booking, {
-        status: "paid",
-        paymentId: payment.id,
-        appFee: payment.appFee,
-        instructorPayout: payment.instructorPayout,
-        paidAt: payment.completedAt,
-        updatedAt: payment.completedAt
-      });
-    }
-
-    writeData(data);
-    sendJson(response, 200, { payment, booking });
     return;
   }
 
@@ -575,14 +442,6 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      if (!REVOLUT_SECRET_KEY || !APP_BASE_URL) {
-        sendJson(response, 503, {
-          error: "Revolut donations are not configured",
-          setup: "Set REVOLUT_SECRET_KEY and a public HTTPS APP_BASE_URL on the server."
-        });
-        return;
-      }
-
       const data = readData();
       const donation = {
         id: `donation-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -590,39 +449,41 @@ const server = http.createServer(async (request, response) => {
         email: body.email || "",
         amount,
         message: body.message || "",
-        status: "checkout_created",
+        status: "recorded",
         createdAt: new Date().toISOString()
       };
-
-      const donationOrder = await createRevolutOrder(
-        {
-          id: donation.id,
-          bookingId: donation.id,
-          teacher: "SoundSlot developer fund",
-          studentName: donation.name,
-          studentEmail: donation.email,
-          instrument: "Developer donation"
-        },
-        { gross: amount },
-        {
-          description: "SoundSlot developer donation",
-          itemName: "Developer donation",
-          reference: donation.id,
-          redirectUrl: appUrl("/contact.html", { donation: "success", donationId: donation.id })
-        }
-      );
-
-      donation.revolutOrderId = donationOrder.id;
-      donation.revolutToken = donationOrder.token;
-      donation.checkoutUrl = donationOrder.checkout_url;
-      if (!donation.checkoutUrl) {
-        throw new Error("Revolut did not return a hosted checkout URL");
-      }
       data.donations = [...(data.donations || []), donation];
       writeData(data);
+      notifyDataChange("donation-recorded", { donationId: donation.id });
       sendJson(response, 201, donation);
     } catch (error) {
       sendJson(response, 400, { error: error.message || "Invalid donation request" });
+    }
+    return;
+  }
+
+  if (url.pathname === "/api/feedback" && request.method === "POST") {
+    try {
+      const body = JSON.parse(await readRequestBody(request));
+      const suggestion = {
+        id: `feedback-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        name: String(body.name || "").trim(),
+        email: String(body.email || "").trim(),
+        type: String(body.type || "Other").trim(),
+        message: String(body.message || "").trim(),
+        createdAt: new Date().toISOString()
+      };
+      if (!suggestion.name || !suggestion.email || !suggestion.message) {
+        sendJson(response, 400, { error: "Name, email, and message are required" });
+        return;
+      }
+      const data = readData();
+      data.suggestions = [...(data.suggestions || []), suggestion];
+      writeData(data);
+      notifyDataChange("feedback-created", { feedbackId: suggestion.id });
+      sendJson(response, 201, { suggestion, suggestions: data.suggestions });
+    } catch {
+      sendJson(response, 400, { error: "Invalid feedback request" });
     }
     return;
   }
