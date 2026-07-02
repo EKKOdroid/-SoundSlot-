@@ -110,8 +110,8 @@ textarea:focus-visible {
 }
 
 .brand-logo {
-  width: clamp(3.35rem, 5vw, 4.35rem);
-  height: clamp(3.35rem, 5vw, 4.35rem);
+  width: clamp(3.5rem, 5vw, 5rem);
+  height: clamp(3.5rem, 5vw, 5rem);
   border-radius: 8px;
   object-fit: cover;
   box-shadow: 0 10px 24px rgba(7, 22, 74, 0.22);
@@ -123,21 +123,21 @@ textarea:focus-visible {
   gap: 0.35rem;
   flex-wrap: wrap;
   border: 1px solid rgba(217, 222, 245, 0.95);
-  border-radius: 8px;
+  border-radius: 20px;
   background: rgba(245, 247, 255, 0.92);
   padding: 0.28rem;
 }
 
 .main-nav a {
   position: relative;
-  border-radius: 8px;
+  border-radius: 20px;
   color: var(--ink);
   font-size: 0.92rem;
   font-weight: 850;
   line-height: 1;
   padding: 0.72rem 0.95rem;
   text-decoration: none;
-  transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  transition: background 360ms ease, color 360ms ease, transform 360ms ease, box-shadow 360ms ease;
 }
 
 .main-nav a:hover {
@@ -203,7 +203,7 @@ textarea:focus-visible {
 .filters,
 .booking-desk {
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 20px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -248,7 +248,7 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 20px;
   background: #ffffff;
   color: var(--ink);
   padding: 0.85rem;
@@ -350,13 +350,13 @@ input[type="range"] {
 .teacher-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .teacher-card {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 20px;
   background: var(--surface);
   box-shadow: 0 10px 30px rgba(7, 22, 74, 0.08);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
